@@ -1,0 +1,25 @@
+order_date,region,product,units,unit_price,discount,customer_type
+2025-01-05,North,Notebook,18,4.50,0.05,Returning
+2025-01-08,South,Pen Set,32,6.00,0.00,New
+2025-01-12,East,Notebook,25,4.50,0.10,Returning
+2025-01-18,West,Desk Lamp,9,22.00,0.05,New
+2025-02-03,North,Desk Lamp,12,22.00,0.00,Returning
+2025-02-09,South,Notebook,28,4.50,0.05,New
+2025-02-14,East,Pen Set,41,6.00,0.10,Returning
+2025-02-21,West,Notebook,19,4.50,0.00,New
+2025-03-02,North,Pen Set,35,6.00,0.05,New
+2025-03-07,South,Desk Lamp,14,22.00,0.10,Returning
+2025-03-15,East,Notebook,31,4.50,0.00,New
+2025-03-22,West,Pen Set,27,6.00,0.05,Returning
+2025-04-04,North,Notebook,38,4.50,0.00,Returning
+2025-04-11,South,Pen Set,44,6.00,0.05,New
+2025-04-16,East,Desk Lamp,16,22.00,0.10,Returning
+2025-04-25,West,Notebook,23,4.50,0.00,New
+2025-05-03,North,Desk Lamp,17,22.00,0.05,New
+2025-05-12,South,Notebook,36,4.50,0.00,Returning
+2025-05-20,East,Pen Set,49,6.00,0.05,New
+2025-05-28,West,Desk Lamp,11,22.00,0.00,Returning
+2025-06-06,North,Pen Set,42,6.00,0.00,Returning
+2025-06-14,South,Desk Lamp,19,22.00,0.05,New
+2025-06-21,East,Notebook,43,4.50,0.00,Returning
+2025-06-29,West,Pen Set,33,6.00,0.10,New
