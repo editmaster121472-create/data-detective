@@ -1,34 +1,27 @@
 # Data Detective
 
-A Flask web app for CSV question-answering using the OpenAI Agents API and an OpenAI-hosted Python sandbox.
+A small Flask web application for free, local CSV inspection. It does not call the OpenAI API and does not require an API key or paid AI credits.
 
-## What it includes
-- CSV upload (10 MB application limit) and an included sample sales dataset.
-- OpenAI Agents API session created with `environment.type = openai_hosted`.
-- Python packages (pandas, numpy, matplotlib) installed in the hosted sandbox; network access disabled.
-- Progress events collected from the streamed agent turn.
-- Follow-up questions sent to the same Agents API session.
-- Downloadable Markdown findings report.
-- API key loaded only by the server from environment variables.
+## Features
+- Upload a CSV file (maximum 12 MB).
+- Inspect row and column counts, missing cells, duplicate rows, and numeric summaries.
+- Ask simple questions about totals, averages, minimums, maximums, and grouped totals.
+- Ask follow-up questions about the same uploaded dataset.
+- Download a JSON analysis report.
+- Download a sample CSV from the application.
 
 ## Run locally
-1. Install Python 3.10+.
-2. `python -m venv .venv` and activate it.
-3. `pip install -r requirements.txt`
-4. Copy `.env.example` to `.env` and add your OpenAI API key.
-5. `python server.py`
-6. Open `http://127.0.0.1:5000`.
-
-The API key needs Agents API session permissions (`api.agents.read`, `api.agents.write`) and Responses inference permission (`api.responses.write`). The Agents API quickstart documents these permissions. Usage of the model and hosted sandbox may incur API charges.
+1. Install Python 3.10 or newer.
+2. Create and activate a virtual environment.
+3. Install dependencies: `pip install -r requirements.txt`
+4. Start the app: `python server.py`
+5. Open `http://127.0.0.1:5000`.
 
 ## Deploying
-This is a server application, not a static GitHub Pages site. Deploy it to a Python-capable host (for example a service that supports Flask), set `OPENAI_API_KEY` as a server environment secret, and use the provider's HTTPS URL. Do not commit `.env`.
+Deploy this Flask application on a Python-capable host such as PythonAnywhere. Configure the WSGI file to import `app` from `server.py`. Install dependencies from `requirements.txt`.
 
-## Production hardening before public launch
-- Replace the in-memory `sessions` dictionary with a database and add authentication/ownership checks.
-- Add rate limiting, CSRF protection, upload scanning, retention/deletion controls, and per-user quotas.
-- Add robust artifact listing/download handling for chart files and report files from the Agents API. The current report download contains the agent's text response in Markdown; the agent is instructed to write charts and a full report in its hosted workspace.
-- Validate CSV encoding and structure more strictly, and set operational timeouts/observability.
+## Important limitations
+This is a rule-based CSV analysis tool, not a general-purpose AI assistant. It cannot reliably answer unrelated general-knowledge questions or perform advanced statistical analysis. Uploaded data and sessions are held in server memory while the process runs; sessions may be lost after a restart. Do not upload sensitive or confidential data.
 
-## Notes
-OpenAI-hosted sandbox sessions are temporary and may expire after inactivity. The sample CSV can be downloaded from the app.
+## Before public launch
+Add user authentication, per-user data isolation, rate limiting, secure session storage, data-retention controls, and additional validation. The current in-memory session store is suitable only for a small demonstration.
