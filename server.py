@@ -108,7 +108,10 @@ def home():
 
 @app.get("/api/sample")
 def sample():
-    return jsonify({"filename": "sample_sales.csv", "csv": SAMPLE_CSV, "rows": 5})
+    output = io.BytesIO(SAMPLE_CSV.encode("utf-8"))
+    output.seek(0)
+    return send_file(output, mimetype="text/csv", as_attachment=True,
+                     download_name="sample_sales.csv")
 
 @app.post("/api/analyze")
 def analyze():
