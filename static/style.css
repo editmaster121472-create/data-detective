@@ -12,3 +12,17 @@
 .chart-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#48c9a3,#9af0d2);min-width:2px}
 .chart-value{font-size:11px;text-align:right;color:var(--mint2);font-variant-numeric:tabular-nums}
 .chart-note{margin:15px 0 0;line-height:1.5}
+
+/* General AI chat */
+.chat-panel{background:linear-gradient(145deg,#122333,#0d1925);border:1px solid var(--line);border-radius:18px;padding:23px;margin:0 0 20px;box-shadow:0 18px 50px #0002}
+.chat-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.chat-head small{font-size:10px;letter-spacing:2px;color:var(--mint);font-weight:800}.chat-head h2{font-size:21px;margin:7px 0}.chat-head p,.chat-note{font-size:11px;color:var(--muted);line-height:1.5;margin:0 0 14px}
+.clear-chat{background:transparent;border:1px solid #365064;color:#b7c8d2;border-radius:9px;padding:8px 11px;font-size:11px}
+.chat-messages{display:flex;flex-direction:column;gap:10px;max-height:420px;min-height:110px;overflow:auto;padding:12px;background:#091722;border:1px solid #24384b;border-radius:12px}
+.chat-welcome{color:var(--muted);font-size:13px;padding:15px;text-align:center}
+.chat-bubble{max-width:88%;padding:12px 14px;border-radius:13px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.65}
+.chat-user{align-self:flex-end;background:#174b43;color:#e9fff8;border-bottom-right-radius:4px}
+.chat-ai{align-self:flex-start;background:#172b3a;color:#e2eeee;border:1px solid #294153;border-bottom-left-radius:4px}
+.chat-pending{color:var(--mint)}.chat-error{align-self:flex-start;color:#ffc5bd;background:#3a2025;border:1px solid #704047;padding:11px;border-radius:10px;font-size:12px}
+.chat-compose{display:flex;gap:10px;align-items:stretch;margin-top:12px}.chat-compose textarea{min-width:0;flex:1;resize:vertical}.chat-compose .primary{width:auto;min-width:90px;margin:0}
+.chat-note{margin:10px 0 0}
+@media(max-width:600px){.chat-panel{padding:17px}.chat-compose{flex-direction:column}.chat-compose .primary{width:100%}.chat-bubble{max-width:96%}}
