@@ -1,4 +1,8 @@
 import csv
+import os
+from dotenv import load_dotenv
+from google import genai
+from google.genai import types
 import io
 import json
 import re
@@ -6,6 +10,8 @@ import uuid
 from collections import Counter, defaultdict
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template, send_file, abort
+
+load_dotenv()
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024
@@ -202,6 +208,56 @@ def followup(session_id):
     answer = answer_question(session["rows"], session["columns"], question, session["profile"])
     return jsonify({"id": session_id, "answer": answer, "report_url": f"/api/report/{session_id}",
                         "chart": build_chart_data(session["rows"], session["columns"], session["profile"])})
+
+
+@app.post("/api/chat")
+def general_chat():
+    data = request.get_json(silent=True) or {}
+    message = str(data.get("message", "")).strip()
+    history = data.get("history", [])
+    if not message:
+        return jsonify({"error": "Please write a message first."}), 400
+    if len(message) > 4000:
+        return jsonify({"error": "Message is too long. Please keep it under 4,000 characters."}), 400
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        return jsonify({"error": "Gemini API key is not configured on the server. Please check the private .env file."}), 503
+    if not isinstance(history, list):
+        history = []
+    safe_history = []
+    for item in history[-12:]:
+        if not isinstance(item, dict):
+            continue
+        role = item.get("role")
+        content = str(item.get("content", "")).strip()
+        if role in ("user", "model") and content:
+            safe_history.append(types.Content(
+                role=role,
+                parts=[types.Part.from_text(text=content[:4000])]
+            ))
+    try:
+        client = genai.Client(api_key=api_key)
+        chat = client.chats.create(
+            model=os.getenv("GEMINI_MODEL", "gemini-3.8-flash"),
+            history=safe_history,
+            config=types.GenerateContentConfig(
+                system_instruction=(
+                    "You are Data Detective, a helpful, accurate general-purpose AI assistant. "
+                    "Answer clearly and naturally. The user may prefer Urdu; reply in the language "
+                    "they use. Explain uncertainty and never claim to have performed actions you did not do."
+                ),
+                max_output_tokens=1800,
+                temperature=0.7
+            )
+        )
+        response = chat.send_message(message)
+        answer = (response.text or "").strip()
+        if not answer:
+            answer = "I could not produce a text response. Please try asking in a different way."
+        return jsonify({"answer": answer})
+    except Exception as exc:
+        app.logger.exception("Gemini chat request failed")
+        return jsonify({"error": "Gemini could not answer this request. Please try again later. Details: " + str(exc)[:300]}), 502
 
 @app.get("/api/report/<session_id>")
 def report(session_id):
