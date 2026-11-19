@@ -84,11 +84,14 @@ def answer_question(rows, columns, question, profile):
     # Detect common grouping requests, including "for each region" and "region-wise".
     group_col = None
     for col in columns:
-        col_pattern = re.escape(col.lower())
-        if re.search(r"(?:\\bby\\s+" + col_pattern + r"\\b|\\bper\\s+" + col_pattern +
-                     r"\\b|\\bfor each\\s+" + col_pattern + r"\\b|\\beach\\s+" +
-                     col_pattern + r"\\b|\\bfor every\\s+" + col_pattern +
-                     r"\\b|\\b" + col_pattern + r"[- ]wise\\b)", q):
+        col_name = col.lower().strip()
+        phrases = (
+            "by " + col_name, "per " + col_name,
+            "for each " + col_name, "each " + col_name,
+            "for every " + col_name, col_name + "-wise",
+            col_name + " wise"
+        )
+        if any(phrase in q for phrase in phrases):
             group_col = col
             break
     if group_col:
