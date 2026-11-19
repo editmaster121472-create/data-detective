@@ -11,6 +11,13 @@
 <header><div class="brand"><div class="mark">⌕</div><div><b>DATA <span>DETECTIVE</span></b><small>Free local CSV analysis</small></div></div><a class="sample" href="/api/sample">↓ Download sample CSV</a></header>
 <main>
 <section class="intro"><div class="eyebrow">YOUR DATA. CLEARER ANSWERS.</div><h1>Find the story<br><em>in your data.</em></h1><p>Upload a CSV and ask a question. The free Python engine calculates summaries and simple group totals on this server.</p><div class="pills"><span>● No API key</span><span>● No paid AI credits</span><span>● Follow-up questions</span></div></section>
+
+<section class="chat-panel">
+  <div class="chat-head"><div><small>GENERAL AI ASSISTANT</small><h2>Chat with Data Detective</h2><p>Ask about science, education, ideas, writing, coding and everyday questions.</p></div><button id="clearChat" class="clear-chat" type="button">Clear chat</button></div>
+  <div id="chatMessages" class="chat-messages" aria-live="polite"><div class="chat-welcome">Hello! I’m Data Detective. Ask me anything to get started.</div></div>
+  <form id="chatForm" class="chat-compose"><textarea id="chatInput" rows="2" maxlength="4000" placeholder="Message Data Detective…"></textarea><button id="chatSend" class="primary" type="submit">Send →</button></form>
+  <p class="chat-note">Powered by Gemini. Usage is subject to Google's free-tier limits. Chat history is saved only in this browser on this device. Avoid entering passwords or sensitive personal information.</p>
+</section>
 <section class="workspace">
 <div class="panel upload"><div class="panel-title"><div><small>STEP 01</small><h2>Bring your dataset</h2></div><div class="file-icon">CSV</div></div>
 <label class="drop" id="drop"><input id="file" type="file" accept=".csv,text/csv"><div class="upload-icon">↑</div><b>Drop your CSV here</b><span>or tap to browse · up to 12 MB</span><strong id="filename">No file selected</strong></label>
