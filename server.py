@@ -81,12 +81,24 @@ def answer_question(rows, columns, question, profile):
     if selected:
         s = profile["numeric"][selected]
         parts.append(f"{selected}: total {s['total']}, average {s['average']}, minimum {s['minimum']}, maximum {s['maximum']}.")
-    group_match = re.search(r"(?:by|per|according to)\s+([a-zA-Z_][\w ]*)", q)
-    if group_match:
-        candidate = group_match.group(1).strip().split()[0]
-        group_col = next((c for c in columns if c.lower() == candidate.lower()), None)
-        sum_col = selected or next(iter(profile["numeric"]), None)
-        if group_col and sum_col:
+    # Detect common grouping requests, including "for each region" and "region-wise".
+    group_col = None
+    for col in columns:
+        col_pattern = re.escape(col.lower())
+        if re.search(r"(?:\\bby\\s+" + col_pattern + r"\\b|\\bper\\s+" + col_pattern +
+                     r"\\b|\\bfor each\\s+" + col_pattern + r"\\b|\\beach\\s+" +
+                     col_pattern + r"\\b|\\bfor every\\s+" + col_pattern +
+                     r"\\b|\\b" + col_pattern + r"[- ]wise\\b)", q):
+            group_col = col
+            break
+    if group_col:
+        sum_col = selected
+        if not sum_col:
+            preferred = ("units", "quantity") if any(w in q for w in ["product", "most sold", "units", "quantity"]) else ("sales", "revenue", "amount", "profit")
+            sum_col = next((c for name in preferred for c in profile["numeric"] if c.lower() == name), None)
+        if not sum_col:
+            sum_col = next(iter(profile["numeric"]), None)
+        if sum_col:
             grouped = defaultdict(float)
             for row in rows:
                 key = str(row.get(group_col, "")).strip() or "(blank)"
@@ -95,7 +107,11 @@ def answer_question(rows, columns, question, profile):
                     grouped[key] += vals[0]
             if grouped:
                 ranking = sorted(grouped.items(), key=lambda x: x[1], reverse=True)
-                parts.append(f"{sum_col} grouped by {group_col}: " + "; ".join(f"{k}: {round(v,2)}" for k,v in ranking) + ".")
+                parts.append(f"{sum_col} grouped by {group_col}: " +
+                             "; ".join(f"{k}: {round(v,2)}" for k, v in ranking) + ".")
+                if any(w in q for w in ["highest", "most", "top", "maximum", "best"]):
+                    top_name, top_value = ranking[0]
+                    parts.append(f"Highest {sum_col} by {group_col}: {top_name} ({round(top_value,2)}).")
     if not question.strip():
         parts.append("Ask a question about totals, averages, missing values, duplicates, or a column.")
     elif len(parts) == 1:
