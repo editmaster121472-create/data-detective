@@ -59,6 +59,46 @@ def profile_data(rows, columns):
     return {"rows": len(rows), "columns": len(columns), "column_names": columns,
             "missing_cells": missing, "duplicate_rows": duplicate_count, "numeric": numeric}
 
+def build_chart_data(rows, columns, profile):
+    """Build a small grouped bar-chart dataset without external services."""
+    date_words = ("date", "time", "timestamp", "year", "month")
+    category_col = None
+    for col in columns:
+        if col in profile["numeric"] or any(word in col.lower() for word in date_words):
+            continue
+        values = {str(row.get(col, "")).strip() or "(blank)" for row in rows}
+        if 2 <= len(values) <= 12:
+            category_col = col
+            break
+    if not category_col:
+        return None
+
+    preferred = ("sales", "revenue", "amount", "profit", "units", "quantity")
+    metric_col = next(
+        (c for name in preferred for c in profile["numeric"] if c.lower() == name),
+        next(iter(profile["numeric"]), None)
+    )
+    if not metric_col:
+        return None
+
+    totals = defaultdict(float)
+    for row in rows:
+        label = str(row.get(category_col, "")).strip() or "(blank)"
+        vals = numeric_values([row], metric_col)
+        if vals:
+            totals[label] += vals[0]
+    if not totals:
+        return None
+    ranked = sorted(totals.items(), key=lambda item: item[1], reverse=True)
+    return {
+        "title": f"{metric_col} by {category_col}",
+        "category": category_col,
+        "metric": metric_col,
+        "labels": [item[0] for item in ranked],
+        "values": [round(item[1], 2) for item in ranked]
+    }
+
+
 def answer_question(rows, columns, question, profile):
     q = (question or "").lower()
     parts = [f"Your dataset has {profile['rows']} rows and {profile['columns']} columns."]
@@ -147,7 +187,8 @@ def analyze():
                                 "filename": uploaded.filename or "dataset.csv"}
         answer = answer_question(rows, columns, question, profile)
         return jsonify({"id": session_id, "session_id": session_id, "answer": answer,
-                        "report_url": f"/api/report/{session_id}", "profile": profile})
+                        "report_url": f"/api/report/{session_id}", "profile": profile,
+                        "chart": build_chart_data(rows, columns, profile)})
     except Exception as exc:
         return jsonify({"error": f"Could not analyze this CSV: {exc}"}), 400
 
@@ -159,7 +200,8 @@ def followup(session_id):
     if not session:
         return jsonify({"error": "This analysis session has expired. Please upload the CSV again."}), 404
     answer = answer_question(session["rows"], session["columns"], question, session["profile"])
-    return jsonify({"id": session_id, "answer": answer, "report_url": f"/api/report/{session_id}"})
+    return jsonify({"id": session_id, "answer": answer, "report_url": f"/api/report/{session_id}",
+                        "chart": build_chart_data(session["rows"], session["columns"], session["profile"])})
 
 @app.get("/api/report/<session_id>")
 def report(session_id):
