@@ -24,6 +24,8 @@
   <a class="side-link" href="#video-studio"><span>▣</span> Video Studio</a>
   <a class="side-link" href="#image-studio"><span>▧</span> Image Studio</a>
   <a class="side-link" href="#data-workspace"><span>▦</span> Data analysis</a>
+  <a class="side-link" href="#workspace-status"><span>◈</span> System status</a>
+  <a class="side-link" href="#founder-panel"><span>♛</span> Founder Panel</a>
   <div class="sidebar-bottom"><div class="status-dot"></div><div><b>Ready to investigate</b><small>AI assistant · CSV tools</small></div></div>
 </aside>
 
@@ -32,8 +34,9 @@
 <header class="topbar">
   <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open navigation menu" aria-controls="appSidebar" aria-expanded="false"><span></span><span></span><span></span></button>
   <div class="mobile-brand"><span class="brand-mark">⌕</span><b>DATA DETECTIVE</b></div>
-  <div class="topbar-caption">Your intelligent workspace</div>
-  <a class="sample-link" href="/api/sample"><span>↓</span> Sample CSV</a>
+  <label class="top-search"><span>⌕</span><input id="workspaceSearch" type="search" placeholder="Search tools, chats and workspace…" aria-label="Search workspace"></label>
+  <div class="topbar-actions"><div class="profile-chip"><span class="profile-avatar">DD</span><span><b>Personal Workspace</b><small>Owner profile</small></span></div>
+  <a class="sample-link" href="/api/sample"><span>↓</span> Sample CSV</a></div>
 </header>
 
 <main class="content">
@@ -82,6 +85,13 @@
     <div class="studio-card studio-planned"><span class="studio-icon">⌁</span><b>Personal Agent</b><small>Gmail, YouTube, reminders and scheduled tasks.</small><em>Secure account connections needed</em></div>
   </div>
 </section>
+
+
+<section class="overview-grid" id="workspace-status" aria-label="Workspace overview">
+  <article class="overview-card activity-card"><div class="overview-title"><span class="overview-icon">◷</span><div><small>WORKSPACE</small><h3>Recent Activity</h3></div></div><div class="activity-row"><i class="activity-dot"></i><span>Chat and research workspace</span><b>Ready</b></div><div class="activity-row"><i class="activity-dot"></i><span>CSV analysis tools</span><b>Ready</b></div><div class="activity-row"><i class="activity-dot pending"></i><span>Creative AI connections</span><b>Setup needed</b></div></article>
+  <article class="overview-card system-card"><div class="overview-title"><span class="overview-icon">⌁</span><div><small>CONNECTIONS</small><h3>System Status</h3></div></div><div class="system-row"><span class="system-indicator ready"></span><span>Website interface</span><b>Available</b></div><div class="system-row"><span class="system-indicator ready"></span><span>CSV analysis</span><b>Available</b></div><div class="system-row"><span class="system-indicator pending"></span><span>Image / Video AI</span><b>Not connected</b></div></article>
+</section>
+<section class="founder-panel" id="founder-panel"><div><div class="eyebrow">PRIVATE OWNER AREA</div><h2>Founder Panel</h2><p>Owner-only controls and security settings. Complete private owner login setup before enabling protected controls.</p></div><span class="founder-lock">♛ <small>OWNER ONLY</small></span><a href="#task-inbox" class="founder-link">Owner setup & tasks ↗</a></section>
 
 <section class="pdf-studio" id="pdf-studio">
   <div class="section-heading"><div><div class="eyebrow">DOCUMENT CREATOR</div><h2>PDF Studio</h2><p>Write or paste your content, then save it as a PDF from your browser.</p></div><span class="step-chip">WORKING TOOL</span></div>
