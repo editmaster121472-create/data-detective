@@ -29,6 +29,7 @@ function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':
 /* General Gemini chat */
 const chatForm=$('chatForm'),chatInput=$('chatInput'),chatMessages=$('chatMessages');
 let chatHistory=[];
+let lastAssistantReply='';
 try{chatHistory=JSON.parse(localStorage.getItem('dd_chat_history')||'[]');if(!Array.isArray(chatHistory))chatHistory=[];}catch(_e){chatHistory=[];}
 function saveChat(){try{localStorage.setItem('dd_chat_history',JSON.stringify(chatHistory.slice(-40)));}catch(_e){}}
 function renderChat(){
@@ -37,6 +38,7 @@ function renderChat(){
   chatHistory.forEach(item=>{const bubble=document.createElement('div');bubble.className='chat-bubble '+(item.role==='user'?'chat-user':'chat-ai');bubble.textContent=item.content;chatMessages.appendChild(bubble);});
   chatMessages.scrollTop=chatMessages.scrollHeight;
 }
+lastAssistantReply=[...chatHistory].reverse().find(item=>item.role==='model')?.content||'';
 renderChat();
 chatForm.addEventListener('submit',async e=>{
   e.preventDefault();const message=chatInput.value.trim();if(!message)return;
@@ -52,7 +54,7 @@ chatForm.addEventListener('submit',async e=>{
     const error=document.createElement('div');error.className='chat-bubble chat-error';error.textContent=err.message;chatMessages.appendChild(error);if(window.dataDetectiveVoiceResume)window.dataDetectiveVoiceResume();
   }finally{$('chatSend').disabled=false;chatInput.focus();}
 });
-$('clearChat').addEventListener('click',()=>{chatHistory=[];saveChat();renderChat();});
+$('clearChat').addEventListener('click',()=>{chatHistory=[];lastAssistantReply='';saveChat();renderChat();});
 
 
 /* Hands-free voice conversation: listen, auto-send, speak, listen again */
@@ -63,7 +65,6 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];saveChat();renderCha
   voiceBar.innerHTML='<label class="voice-language-label" for="voiceLanguage">زبان</label><select id="voiceLanguage" aria-label="Voice language"><option value="ur-PK">اردو</option><option value="en-US">English</option></select><button type="button" id="voiceMode" class="voice-button">🎙️ گفتگو شروع کریں</button><button type="button" id="speakerMode" class="voice-button voice-toggle" aria-pressed="false">🔊 جواب سنیں</button>';
   chatForm.insertAdjacentElement('afterend',voiceBar);
   const language=$('voiceLanguage'), mode=$('voiceMode'), speaker=$('speakerMode');
-  let lastAssistantReply='';
   let speakerActive=false;
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   let recognition=null, voiceActive=false, voiceBusy=false, restarting=false;
