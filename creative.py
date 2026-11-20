@@ -20,6 +20,34 @@ def _token():
     return os.getenv("REPLICATE_API_TOKEN", "").strip()
 
 
+def _cloudflare_credentials():
+    return (os.getenv("CLOUDFLARE_ACCOUNT_ID", "").strip(),
+            os.getenv("CLOUDFLARE_API_TOKEN", "").strip())
+
+
+def _cloudflare_image(prompt):
+    account_id, api_token = _cloudflare_credentials()
+    if not account_id or not api_token:
+        raise RuntimeError("Free image service is not configured. Add CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN to the private .env file.")
+    url = ("https://api.cloudflare.com/client/v4/accounts/" + account_id +
+           "/ai/run/@cf/black-forest-labs/flux-1-schnell")
+    payload = json.dumps({"prompt": prompt[:2048], "steps": 4}).encode("utf-8")
+    req = urllib.request.Request(url, data=payload, headers={
+        "Authorization": "Bearer " + api_token,
+        "Content-Type": "application/json",
+    }, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=120) as response:
+            result = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError("Cloudflare image service HTTP " + str(exc.code) + ": " + detail[:400])
+    image = result.get("result", {}).get("image")
+    if not image:
+        raise RuntimeError("Cloudflare did not return an image. Check the API token permissions and daily free quota.")
+    return "data:image/jpeg;base64," + image
+
+
 def _model(env_name, default):
     value = os.getenv(env_name, default).strip()
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", value):
@@ -74,9 +102,14 @@ def _image_data_url(upload):
 
 @creative_bp.get("/api/creative/config")
 def creative_config():
+    account_id, cloudflare_token = _cloudflare_credentials()
+    image_provider = "cloudflare" if account_id and cloudflare_token else ("replicate" if _token() else "none")
     return jsonify({
-        "configured": bool(_token()),
-        "image_model": os.getenv("REPLICATE_IMAGE_MODEL", "black-forest-labs/flux-schnell"),
+        "configured": bool(_token() or (account_id and cloudflare_token)),
+        "image_configured": image_provider != "none",
+        "image_provider": image_provider,
+        "video_configured": bool(_token()),
+        "image_model": "@cf/black-forest-labs/flux-1-schnell" if image_provider == "cloudflare" else os.getenv("REPLICATE_IMAGE_MODEL", "black-forest-labs/flux-schnell"),
         "video_model": os.getenv("REPLICATE_VIDEO_MODEL", "minimax/video-01"),
     })
 
@@ -88,6 +121,12 @@ def generate_image():
     if not prompt or len(prompt) > 1800:
         return jsonify({"error": "Write an image prompt (maximum 1,800 characters)."}), 400
     try:
+        account_id, cloudflare_token = _cloudflare_credentials()
+        if account_id and cloudflare_token:
+            if request.files.get("reference") and request.files["reference"].filename:
+                return jsonify({"error": "The free Cloudflare image option currently supports text-to-image only. Reference-image editing remains on the optional Replicate service."}), 400
+            image_data = _cloudflare_image(prompt)
+            return jsonify({"image_data": image_data, "provider": "cloudflare"}), 200
         inputs = {"prompt": prompt, "aspect_ratio": data.get("aspect_ratio", "1:1"),
                   "output_format": "webp"}
         if inputs["aspect_ratio"] not in ("1:1", "16:9", "9:16", "4:3", "3:4"):
