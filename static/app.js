@@ -49,7 +49,7 @@ chatForm.addEventListener('submit',async e=>{
     chatHistory.push({role:'model',content:data.answer});saveChat();renderChat();if(window.dataDetectiveSpeakReply)window.dataDetectiveSpeakReply(data.answer);
   }catch(err){
     chatHistory.pop();saveChat();renderChat();
-    const error=document.createElement('div');error.className='chat-bubble chat-error';error.textContent=err.message;chatMessages.appendChild(error);
+    const error=document.createElement('div');error.className='chat-bubble chat-error';error.textContent=err.message;chatMessages.appendChild(error);if(window.dataDetectiveVoiceResume)window.dataDetectiveVoiceResume();
   }finally{$('chatSend').disabled=false;chatInput.focus();}
 });
 $('clearChat').addEventListener('click',()=>{chatHistory=[];saveChat();renderChat();});
