@@ -46,7 +46,7 @@ chatForm.addEventListener('submit',async e=>{
   try{
     const response=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,history:previous})});
     const data=await response.json();if(!response.ok)throw new Error(data.error||'Chat request failed');
-    chatHistory.push({role:'model',content:data.answer});saveChat();renderChat();
+    chatHistory.push({role:'model',content:data.answer});saveChat();renderChat();if(window.dataDetectiveSpeakReply)window.dataDetectiveSpeakReply(data.answer);
   }catch(err){
     chatHistory.pop();saveChat();renderChat();
     const error=document.createElement('div');error.className='chat-bubble chat-error';error.textContent=err.message;chatMessages.appendChild(error);
