@@ -128,17 +128,6 @@ def generate_image():
             return jsonify({"error": "The free Cloudflare image option currently supports text-to-image only. Remove the reference image or use a separately enabled paid provider."}), 400
         image_data = _cloudflare_image(prompt)
         return jsonify({"image_data": image_data, "provider": "cloudflare"}), 200
-        inputs = {"prompt": prompt, "aspect_ratio": data.get("aspect_ratio", "1:1"),
-                  "output_format": "webp"}
-        if inputs["aspect_ratio"] not in ("1:1", "16:9", "9:16", "4:3", "3:4"):
-            inputs["aspect_ratio"] = "1:1"
-        reference = _image_data_url(request.files.get("reference"))
-        if reference:
-            inputs["image"] = reference
-        result, error = _create(_model("REPLICATE_IMAGE_MODEL", "black-forest-labs/flux-schnell"), inputs)
-        if error:
-            return error
-        return jsonify({"prediction": result}), 202
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     except Exception as exc:
