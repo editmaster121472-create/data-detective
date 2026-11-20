@@ -156,3 +156,33 @@ a.studio-card:hover{transform:translateY(-2px);border-color:#8b72d5}
 .pdf-actions .privacy{margin:0}
 @media(max-width:900px){.studio-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.studio-grid{gap:8px}.studio-card{min-height:158px;padding:13px}.pdf-actions{display:block}.pdf-actions .analyze-button{max-width:none}.pdf-actions .privacy{margin-top:10px}}
+
+
+/* Private Task Inbox */
+.task-inbox{border-top:1px solid #2c2b34;padding-top:34px;margin:0 0 48px}
+.task-layout{display:grid;grid-template-columns:.88fr 1.12fr;gap:15px}
+.task-form,.task-list-panel{min-width:0}
+.task-refresh{border:1px solid #49405e;border-radius:8px;background:#292534;color:#d8ccff;padding:7px 10px;font-size:10px;cursor:pointer}
+.task-counts{display:flex;gap:9px;margin:-2px 0 13px}
+.task-counts span{flex:1;padding:10px;border:1px solid #383641;border-radius:9px;background:#222129;color:#a1a1aa;font-size:10px}
+.task-counts b{display:block;color:#e4e4e7;font-size:18px;margin-bottom:2px}
+.task-message{font-size:10px;line-height:1.5;color:#a1a1aa;margin:0 0 12px}
+.task-message-error{color:#fda4af}
+.task-list{display:grid;gap:9px}
+.task-item{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:13px;border:1px solid #3a3844;border-radius:11px;background:#222129}
+.task-main{min-width:0;flex:1}
+.task-title{display:block;font-size:12px;line-height:1.5;color:#f4f4f5;overflow-wrap:anywhere}
+.task-main p{font-size:10px;line-height:1.5;color:#a1a1aa;white-space:pre-wrap;overflow-wrap:anywhere;margin:5px 0}
+.task-due{display:block;color:#b9a5f5;font-size:9px;margin-top:7px}
+.task-done .task-title{text-decoration:line-through;color:#9ca3af}
+.task-done .task-due{color:#86efac}
+.task-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:5px;flex:none}
+.task-action{border:1px solid #494653;border-radius:7px;padding:6px 8px;background:#302e38;color:#e4e4e7;font-size:9px;cursor:pointer}
+.task-action:hover{border-color:#a78bfa}
+.task-complete{color:#bbf7d0;border-color:#3e6954}
+.task-delete{color:#fda4af;border-color:#71414b}
+.task-empty{min-height:150px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;color:#a1a1aa;text-align:center}
+.task-empty b{font-size:12px;color:#e4e4e7}
+.task-empty span{font-size:10px}
+@media(max-width:850px){.task-layout{grid-template-columns:1fr}}
+@media(max-width:520px){.task-item{display:block}.task-actions{justify-content:flex-start;margin-top:11px}.task-action{padding:7px 10px}}
