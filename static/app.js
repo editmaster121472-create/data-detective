@@ -400,7 +400,7 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];lastAssistantReply='
     if (fileInput.files[0]) form.append("reference", fileInput.files[0]);
     if (isImage) form.append("aspect_ratio", byId("imageRatio").value);
     button.disabled = true;
-    setStatus(kind, "Sending your request securely to Replicate…");
+    setStatus(kind, "Sending your request to the selected AI service…");
     byId(kind + "Result").replaceChildren();
     try {
       const response = await fetch("/api/creative/" + kind, {method: "POST", body: form});
