@@ -13,11 +13,13 @@ from datetime import datetime
 from flask import Flask, request, jsonify, render_template, send_file, abort, session, redirect, url_for
 from auth import auth_is_configured, owner_required, owner_is_authenticated, verify_owner_credentials
 from task_store import create_task, delete_task, list_tasks, update_task
+from creative import creative_bp
 from functools import wraps
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
+app.register_blueprint(creative_bp)
 app.secret_key = os.getenv("SECRET_KEY") or secrets.token_hex(32)
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,

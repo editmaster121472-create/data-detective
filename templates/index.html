@@ -24,6 +24,8 @@
   <a class="side-link" href="#video-studio"><span>▣</span> Video Studio</a>
   <a class="side-link" href="#image-studio"><span>▧</span> Image Studio</a>
   <a class="side-link" href="#data-workspace"><span>▦</span> Data analysis</a>
+  <a class="side-link" href="#workspace-status"><span>◈</span> System status</a>
+  <a class="side-link" href="#founder-panel"><span>♛</span> Founder Panel</a>
   <div class="sidebar-bottom"><div class="status-dot"></div><div><b>Ready to investigate</b><small>AI assistant · CSV tools</small></div></div>
 </aside>
 
@@ -32,8 +34,9 @@
 <header class="topbar">
   <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open navigation menu" aria-controls="appSidebar" aria-expanded="false"><span></span><span></span><span></span></button>
   <div class="mobile-brand"><span class="brand-mark">⌕</span><b>DATA DETECTIVE</b></div>
-  <div class="topbar-caption">Your intelligent workspace</div>
-  <a class="sample-link" href="/api/sample"><span>↓</span> Sample CSV</a>
+  <label class="top-search"><span>⌕</span><input id="workspaceSearch" type="search" placeholder="Search tools, chats and workspace…" aria-label="Search workspace"></label>
+  <div class="topbar-actions"><div class="profile-chip"><span class="profile-avatar">DD</span><span><b>Personal Workspace</b><small>Owner profile</small></span></div>
+  <a class="sample-link" href="/api/sample"><span>↓</span> Sample CSV</a></div>
 </header>
 
 <main class="content">
@@ -75,13 +78,41 @@
     <a class="studio-card studio-featured" href="#pdf-studio"><span class="studio-icon">▤</span><b>PDF Studio</b><small>Create a clean PDF from your text using your browser’s print-to-PDF feature.</small><em>Available now ↗</em></a>
     <a class="studio-card" href="#assistant"><span class="studio-icon">✳</span><b>AI Chat & Research</b><small>Ask questions, learn, write, translate and brainstorm.</small><em>Available now ↗</em></a>
     <a class="studio-card" href="#data-workspace"><span class="studio-icon">▦</span><b>Data & Excel</b><small>Analyze CSV files, discover patterns and view charts.</small><em>Available now ↗</em></a>
-    <div class="studio-card studio-planned" id="video-studio"><span class="studio-icon">▣</span><b>Video Studio</b><small>Text-to-video, image-to-video, editing, captions and voice-over.</small><em>Needs video AI connection</em></div>
-    <div class="studio-card studio-planned" id="image-studio"><span class="studio-icon">▧</span><b>Image Studio</b><small>Generate images, edit pictures, remove backgrounds and make thumbnails.</small><em>Needs image AI connection</em></div>
+    <a class="studio-card" href="#video-studio"><span class="studio-icon">▣</span><b>Video Studio</b><small>Generate short videos from a prompt or reference image.</small><em>Open Video Studio ↗</em></a>
+    <a class="studio-card" href="#image-studio"><span class="studio-icon">▧</span><b>Image Studio</b><small>Create images from text prompts or a reference picture.</small><em>Open Image Studio ↗</em></a>
     <div class="studio-card studio-planned"><span class="studio-icon">◉</span><b>Voice & Live</b><small>Talk naturally, hear answers and give spoken commands.</small><em>Voice basics available · live service needed</em></div>
     <div class="studio-card studio-planned"><span class="studio-icon">▱</span><b>Documents & Slides</b><small>Create Word documents, presentations, notes and reports.</small><em>Next build stage</em></div>
     <div class="studio-card studio-planned"><span class="studio-icon">⌁</span><b>Personal Agent</b><small>Gmail, YouTube, reminders and scheduled tasks.</small><em>Secure account connections needed</em></div>
   </div>
 </section>
+
+
+<section class="creative-studio" id="image-studio">
+  <div class="section-heading"><div><div class="eyebrow">REPLICATE POWERED</div><h2>Image Studio</h2><p>Describe the image you want. Your API token stays private on the server.</p></div><span class="step-chip">IMAGE GENERATOR</span></div>
+  <div class="creative-panel">
+    <label class="field-label" for="imagePrompt">Image description</label>
+    <textarea id="imagePrompt" rows="3" maxlength="1800" placeholder="A cinematic, ultra-detailed scene of..."></textarea>
+    <div class="creative-options"><div><label class="field-label" for="imageRatio">Aspect ratio</label><select id="imageRatio"><option value="1:1">Square 1:1</option><option value="16:9">Landscape 16:9</option><option value="9:16">Portrait 9:16</option><option value="4:3">Classic 4:3</option><option value="3:4">Portrait 3:4</option></select></div><div><label class="field-label" for="imageReference">Reference image (optional)</label><input id="imageReference" type="file" accept="image/png,image/jpeg,image/webp"></div></div>
+    <button class="analyze-button" id="generateImage" type="button">Generate image <span>✦</span></button>
+    <p class="creative-status" id="imageStatus" aria-live="polite">Checking image service…</p><div class="creative-result" id="imageResult"></div>
+  </div>
+</section>
+<section class="creative-studio" id="video-studio">
+  <div class="section-heading"><div><div class="eyebrow">REPLICATE POWERED</div><h2>Video Studio</h2><p>Generate a video from a written prompt, with an optional first-frame image.</p></div><span class="step-chip">VIDEO GENERATOR</span></div>
+  <div class="creative-panel">
+    <label class="field-label" for="videoPrompt">Video description</label>
+    <textarea id="videoPrompt" rows="3" maxlength="1200" placeholder="A slow cinematic camera move through a futuristic city at sunset..."></textarea>
+    <label class="field-label" for="videoReference">First frame image (optional)</label><input id="videoReference" type="file" accept="image/png,image/jpeg,image/webp">
+    <button class="analyze-button" id="generateVideo" type="button">Generate video <span>▶</span></button>
+    <p class="creative-status" id="videoStatus" aria-live="polite">Checking video service…</p><div class="creative-result" id="videoResult"></div>
+  </div>
+</section>
+
+<section class="overview-grid" id="workspace-status" aria-label="Workspace overview">
+  <article class="overview-card activity-card"><div class="overview-title"><span class="overview-icon">◷</span><div><small>WORKSPACE</small><h3>Recent Activity</h3></div></div><div class="activity-row"><i class="activity-dot"></i><span>Chat and research workspace</span><b>Ready</b></div><div class="activity-row"><i class="activity-dot"></i><span>CSV analysis tools</span><b>Ready</b></div><div class="activity-row"><i class="activity-dot pending"></i><span>Creative AI connections</span><b>Setup needed</b></div></article>
+  <article class="overview-card system-card"><div class="overview-title"><span class="overview-icon">⌁</span><div><small>CONNECTIONS</small><h3>System Status</h3></div></div><div class="system-row"><span class="system-indicator ready"></span><span>Website interface</span><b>Available</b></div><div class="system-row"><span class="system-indicator ready"></span><span>CSV analysis</span><b>Available</b></div><div class="system-row"><span class="system-indicator pending"></span><span>Image / Video AI</span><b>Not connected</b></div></article>
+</section>
+<section class="founder-panel" id="founder-panel"><div><div class="eyebrow">PRIVATE OWNER AREA</div><h2>Founder Panel</h2><p>Owner-only controls and security settings. Complete private owner login setup before enabling protected controls.</p></div><span class="founder-lock">♛ <small>OWNER ONLY</small></span><a href="#task-inbox" class="founder-link">Owner setup & tasks ↗</a></section>
 
 <section class="pdf-studio" id="pdf-studio">
   <div class="section-heading"><div><div class="eyebrow">DOCUMENT CREATOR</div><h2>PDF Studio</h2><p>Write or paste your content, then save it as a PDF from your browser.</p></div><span class="step-chip">WORKING TOOL</span></div>
