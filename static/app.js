@@ -348,7 +348,7 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];lastAssistantReply='
     const box = byId(kind + "Result");
     box.replaceChildren();
     const urls = Array.isArray(output) ? output : [output];
-    urls.filter(x => typeof x === "string" && /^https:\/\//i.test(x)).forEach(url => {
+    urls.filter(x => typeof x === "string" && (/^https:\/\//i.test(x) || /^data:image\//i.test(x))).forEach(url => {
       let media;
       if (kind === "video") {
         media = document.createElement("video");
@@ -406,7 +406,12 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];lastAssistantReply='
       const response = await fetch("/api/creative/" + kind, {method: "POST", body: form});
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Generation request failed.");
-      await waitForPrediction(kind, data.prediction);
+      if (kind === "image" && data.image_data) {
+        showOutput("image", data.image_data);
+        setStatus("image", "Image created with Cloudflare Workers AI. Free daily quota applies.");
+      } else {
+        await waitForPrediction(kind, data.prediction);
+      }
     } catch (error) {
       setStatus(kind, error.message || "Something went wrong. Please try again.");
     } finally {
@@ -416,10 +421,10 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];lastAssistantReply='
   byId("generateImage")?.addEventListener("click", () => generate("image"));
   byId("generateVideo")?.addEventListener("click", () => generate("video"));
   fetch("/api/creative/config").then(r => r.json()).then(config => {
-    setStatus("image", config.configured ? "Image service connected. Generation may use paid credits after any free trial." : "Replicate token not detected by this server yet.");
-    setStatus("video", config.configured ? "Video service connected. Video generation may cost more credits." : "Replicate token not detected by this server yet.");
+    setStatus("image", config.image_provider === "cloudflare" ? "Free Cloudflare image service connected. Daily quota applies; reference-image editing is not included." : (config.image_provider === "replicate" ? "Replicate image service connected. Generation may use paid credits." : "Add Cloudflare credentials to enable the free image option."));
+    setStatus("video", config.video_configured ? "Replicate video service connected. Video generation may cost credits." : "Video service not configured; Replicate token needed.");
   }).catch(() => {
-    setStatus("image", "Could not check Replicate connection.");
-    setStatus("video", "Could not check Replicate connection.");
+    setStatus("image", "Could not check image service connection.");
+    setStatus("video", "Could not check video service connection.");
   });
 })();
