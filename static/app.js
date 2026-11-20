@@ -55,48 +55,33 @@ chatForm.addEventListener('submit',async e=>{
 $('clearChat').addEventListener('click',()=>{chatHistory=[];saveChat();renderChat();});
 
 
-/* Browser voice input and spoken replies (no extra API key or paid voice service) */
+/* Hands-free voice conversation: listen, auto-send, speak, listen again */
 (function setupVoiceChat(){
   if(!chatForm || !chatInput || !chatMessages) return;
   const voiceBar=document.createElement('div');
   voiceBar.className='voice-tools';
-  voiceBar.innerHTML='<label class="voice-language-label" for="voiceLanguage">Voice language</label><select id="voiceLanguage" aria-label="Voice language"><option value="ur-PK">اردو</option><option value="en-US">English</option></select><button type="button" id="voiceMic" class="voice-button">🎙️ بول کر پوچھیں</button><button type="button" id="voiceSpeak" class="voice-button voice-toggle" aria-pressed="false">🔊 جواب سنائیں: بند</button>';
+  voiceBar.innerHTML='<label class="voice-language-label" for="voiceLanguage">زبان</label><select id="voiceLanguage" aria-label="Voice language"><option value="ur-PK">اردو</option><option value="en-US">English</option></select><button type="button" id="voiceMode" class="voice-button">🎙️ گفتگو شروع کریں</button>';
   chatForm.insertAdjacentElement('afterend',voiceBar);
-  const language=$('voiceLanguage'), mic=$('voiceMic'), speak=$('voiceSpeak');
+  const language=$('voiceLanguage'), mode=$('voiceMode');
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-  let recognition=null, listening=false, speakReplies=false;
-  function setMic(active){
-    listening=active;
-    mic.textContent=active?'⏹️ سننا بند کریں':'🎙️ بول کر پوچھیں';
-    mic.classList.toggle('voice-active',active);
+  let recognition=null, voiceActive=false, voiceBusy=false, restarting=false;
+  function setButton(){
+    mode.textContent=voiceActive?'⏹️ گفتگو بند کریں':'🎙️ گفتگو شروع کریں';
+    mode.classList.toggle('voice-active',voiceActive);
+    mode.setAttribute('aria-pressed',String(voiceActive));
   }
-  if(!SpeechRecognition){
-    mic.disabled=true;
-    mic.textContent='🎙️ وائس ان پٹ اس براؤزر میں دستیاب نہیں';
-    mic.title='Try the latest Google Chrome on Android.';
-  }else{
-    recognition=new SpeechRecognition();
-    recognition.interimResults=true;
-    recognition.continuous=false;
-    recognition.onstart=()=>setMic(true);
-    recognition.onresult=(event)=>{
-      let transcript='';
-      for(let i=event.resultIndex;i<event.results.length;i++) transcript+=event.results[i][0].transcript;
-      chatInput.value=transcript;
-    };
-    recognition.onerror=(event)=>{
-      setMic(false);
-      if(event.error==='not-allowed') alert('مائیکروفون کی اجازت دیں، پھر دوبارہ کوشش کریں۔');
-      else if(event.error!=='no-speech'&&event.error!=='aborted') alert('آواز سننے میں مسئلہ آیا: '+event.error);
-    };
-    recognition.onend=()=>setMic(false);
-    mic.addEventListener('click',()=>{
-      if(listening){recognition.stop();return;}
-      try{recognition.lang=language.value;recognition.start();}
-      catch(_e){alert('مائیکروفون ابھی مصروف ہے۔ چند لمحے بعد دوبارہ کوشش کریں۔');}
-    });
+  function startListening(){
+    if(!voiceActive||voiceBusy||!recognition||restarting)return;
+    try{restarting=true;recognition.lang=language.value;recognition.start();}
+    catch(_e){}
+    setTimeout(()=>{restarting=false;},500);
   }
-  function stopSpeaking(){if('speechSynthesis' in window) window.speechSynthesis.cancel();}
+  function stopListening(){
+    if(recognition){try{recognition.stop();}catch(_e){}}
+  }
+  function stopSpeaking(){
+    if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }
   function cleanSpeechText(value){
     return String(value||'')
       .replace(/```[\s\S]*?```/g,' ')
@@ -111,28 +96,68 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];saveChat();renderCha
       .replace(/\s+/g,' ')
       .trim();
   }
-  function speakText(text){
-    if(!speakReplies||!('speechSynthesis' in window)||!text) return;
-    const cleanText=cleanSpeechText(text);
-    if(!cleanText) return;
+  function speakText(value){
+    const clean=cleanSpeechText(value);
+    if(!clean||!('speechSynthesis' in window))return false;
     stopSpeaking();
-    const utterance=new SpeechSynthesisUtterance(cleanText);
-    const isUrdu=/[\u0600-\u06FF]/.test(text);
+    const utterance=new SpeechSynthesisUtterance(clean);
+    const isUrdu=/[\u0600-\u06FF]/.test(clean);
     utterance.lang=isUrdu?'ur-PK':'en-US';
     const voices=window.speechSynthesis.getVoices();
     const preferred=voices.find(v=>isUrdu?/^ur([_-]|$)/i.test(v.lang):/^en([_-]|$)/i.test(v.lang));
-    if(preferred) utterance.voice=preferred;
+    if(preferred)utterance.voice=preferred;
+    utterance.onend=()=>{if(voiceActive){voiceBusy=false;startListening();}};
+    utterance.onerror=()=>{if(voiceActive){voiceBusy=false;startListening();}};
     window.speechSynthesis.speak(utterance);
+    return true;
   }
-  speak.addEventListener('click',()=>{
-    speakReplies=!speakReplies;
-    speak.setAttribute('aria-pressed',String(speakReplies));
-    speak.textContent=speakReplies?'🔊 جواب سنائیں: آن':'🔊 جواب سنائیں: بند';
-    if(!speakReplies) stopSpeaking();
-    else {
-      const last=[...chatHistory].reverse().find(x=>x.role==='model');
-      if(last) speakText(last.content);
+  window.dataDetectiveSpeakReply=(answer)=>{
+    if(voiceActive){if(!speakText(answer)){voiceBusy=false;startListening();}}
+  };
+  window.dataDetectiveVoiceResume=()=>{
+    if(voiceActive){voiceBusy=false;startListening();}
+  };
+  if(!SpeechRecognition){
+    mode.disabled=true;
+    mode.textContent='اس براؤزر میں وائس دستیاب نہیں';
+    mode.title='Android پر Google Chrome استعمال کریں۔';
+    return;
+  }
+  recognition=new SpeechRecognition();
+  recognition.interimResults=true;
+  recognition.continuous=false;
+  recognition.onresult=(event)=>{
+    let finalText='';
+    for(let i=event.resultIndex;i<event.results.length;i++){
+      const part=event.results[i][0].transcript;
+      if(event.results[i].isFinal)finalText+=part;
     }
+    if(finalText.trim()&&voiceActive&&!voiceBusy){
+      chatInput.value=finalText.trim();
+      voiceBusy=true;
+      stopListening();
+      setTimeout(()=>{if(voiceActive)chatForm.requestSubmit();},250);
+    }
+  };
+  recognition.onerror=(event)=>{
+    if(event.error==='not-allowed'){
+      voiceActive=false;voiceBusy=false;setButton();
+      alert('مائیکروفون کی اجازت دیں، پھر وائس گفتگو شروع کریں۔');
+    }else if(event.error!=='no-speech'&&event.error!=='aborted'){
+      voiceBusy=false;
+      if(voiceActive)setTimeout(startListening,700);
+    }
+  };
+  recognition.onend=()=>{
+    restarting=false;
+    if(voiceActive&&!voiceBusy)setTimeout(startListening,350);
+  };
+  mode.addEventListener('click',()=>{
+    if(voiceActive){
+      voiceActive=false;voiceBusy=false;stopListening();stopSpeaking();setButton();
+      return;
+    }
+    voiceActive=true;voiceBusy=false;setButton();startListening();
   });
-  window.dataDetectiveSpeakReply=speakText;
+  setButton();
 })();
