@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="dd-task-csrf" content="{{ task_csrf|default('') }}">
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
@@ -17,6 +18,7 @@
   <button id="clearChat" class="new-chat" type="button"><span>＋</span> New chat</button>
   <div class="side-label">YOUR WORKSPACE</div>
   <a class="side-link active" href="#assistant"><span>✳</span> AI Assistant</a>
+  <a class="side-link" href="#task-inbox"><span>☑</span> Task Inbox</a>
   <a class="side-link" href="#ai-studio"><span>✧</span> AI Studio</a>
   <a class="side-link" href="#pdf-studio"><span>▤</span> PDF Studio</a>
   <a class="side-link" href="#data-workspace"><span>▦</span> Data analysis</a>
@@ -35,6 +37,32 @@
   <div class="eyebrow"><span class="eyebrow-dot"></span> YOUR AI INVESTIGATION PARTNER</div>
   <h1>What can I help you<br><span>discover today?</span></h1>
   <p>Ask anything, explore ideas, or uncover insights hidden in your data.</p>
+</section>
+
+<section class="task-inbox" id="task-inbox">
+  <div class="section-heading">
+    <div><div class="eyebrow">YOUR PRIVATE PERSONAL AGENT</div><h2>Task Inbox</h2><p>Save tasks, add due dates, and track what you have completed.</p></div>
+    <span class="step-chip">OWNER ONLY</span>
+  </div>
+  <div class="task-layout">
+    <form id="taskForm" class="panel task-form">
+      <div class="panel-title"><div><small>ADD A TASK</small><h3>What needs to get done?</h3></div><span class="file-icon">＋</span></div>
+      <label class="field-label" for="taskTitle">Task title</label>
+      <input id="taskTitle" maxlength="160" required placeholder="e.g. Prepare my next video">
+      <label class="field-label" for="taskDescription">Details (optional)</label>
+      <textarea id="taskDescription" rows="3" maxlength="2000" placeholder="Add notes or instructions…"></textarea>
+      <label class="field-label" for="taskDue">Due date and time (optional)</label>
+      <input id="taskDue" type="datetime-local">
+      <button id="saveTask" class="analyze-button" type="submit">Save task <span>＋</span></button>
+      <p class="privacy">Tasks are saved in the server database and tied to your owner login. Due dates are stored in UTC. Automatic alerts are a separate scheduler feature and are not enabled yet.</p>
+    </form>
+    <div class="panel task-list-panel">
+      <div class="panel-title"><div><small>YOUR TASKS</small><h3>My task list</h3></div><button id="refreshTasks" class="task-refresh" type="button">↻ Refresh</button></div>
+      <div class="task-counts"><span><b id="pendingCount">0</b> Pending</span><span><b id="completedCount">0</b> Completed</span></div>
+      <p id="taskMessage" class="task-message" role="status">Loading your private tasks…</p>
+      <div id="taskList" class="task-list"></div>
+    </div>
+  </div>
 </section>
 
 <section class="studio-section" id="ai-studio">
