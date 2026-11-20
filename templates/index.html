@@ -3,33 +3,78 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Data Detective — Free CSV Analyzer</title>
+<meta name="theme-color" content="#101014">
+<title>Data Detective AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<div class="shell">
-<header><div class="brand"><div class="mark">⌕</div><div><b>DATA <span>DETECTIVE</span></b><small>Free local CSV analysis</small></div></div><a class="sample" href="/api/sample">↓ Download sample CSV</a></header>
-<main>
-<section class="intro"><div class="eyebrow">YOUR DATA. CLEARER ANSWERS.</div><h1>Find the story<br><em>in your data.</em></h1><p>Upload a CSV and ask a question. The free Python engine calculates summaries and simple group totals on this server.</p><div class="pills"><span>● No API key</span><span>● No paid AI credits</span><span>● Follow-up questions</span></div></section>
+<div class="app-shell">
+<aside class="sidebar">
+  <a class="brand" href="/" aria-label="Data Detective home"><span class="brand-mark">⌕</span><span class="brand-copy"><b>DATA DETECTIVE</b><small>AI workspace</small></span></a>
+  <button id="clearChat" class="new-chat" type="button"><span>＋</span> New chat</button>
+  <div class="side-label">YOUR WORKSPACE</div>
+  <a class="side-link active" href="#assistant"><span>✳</span> AI Assistant</a>
+  <a class="side-link" href="#data-workspace"><span>▦</span> Data analysis</a>
+  <div class="sidebar-bottom"><div class="status-dot"></div><div><b>Ready to investigate</b><small>AI assistant · CSV tools</small></div></div>
+</aside>
+
+<div class="main-area">
+<header class="topbar">
+  <div class="mobile-brand"><span class="brand-mark">⌕</span><b>DATA DETECTIVE</b></div>
+  <div class="topbar-caption">Your intelligent workspace</div>
+  <a class="sample-link" href="/api/sample"><span>↓</span> Sample CSV</a>
+</header>
+
+<main class="content">
+<section class="intro" id="assistant">
+  <div class="eyebrow"><span class="eyebrow-dot"></span> YOUR AI INVESTIGATION PARTNER</div>
+  <h1>What can I help you<br><span>discover today?</span></h1>
+  <p>Ask anything, explore ideas, or uncover insights hidden in your data.</p>
+</section>
 
 <section class="chat-panel">
-  <div class="chat-head"><div><small>GENERAL AI ASSISTANT</small><h2>Chat with Data Detective</h2><p>Ask about science, education, ideas, writing, coding and everyday questions.</p></div><button id="clearChat" class="clear-chat" type="button">Clear chat</button></div>
-  <div id="chatMessages" class="chat-messages" aria-live="polite"><div class="chat-welcome">Hello! I’m Data Detective. Ask me anything to get started.</div></div>
-  <form id="chatForm" class="chat-compose"><textarea id="chatInput" rows="2" maxlength="4000" placeholder="Message Data Detective…"></textarea><button id="chatSend" class="primary" type="submit">Send →</button></form>
-  <p class="chat-note">Powered by Groq. Usage is subject to Groq account limits and applicable pricing. Chat history is saved only in this browser on this device. Avoid entering passwords or sensitive personal information.</p>
+  <div class="chat-head">
+    <div class="assistant-identity"><div class="assistant-avatar">✳</div><div><h2>Data Detective</h2><p><span class="online-dot"></span> AI assistant is ready</p></div></div>
+    <span class="model-chip">AI ASSISTANT</span>
+  </div>
+  <div id="chatMessages" class="chat-messages" aria-live="polite"><div class="chat-welcome"><div class="welcome-symbol">✳</div><b>Hello! I’m Data Detective.</b><span>Ask me a question and let’s figure it out together.</span></div></div>
+  <form id="chatForm" class="chat-compose">
+    <textarea id="chatInput" rows="1" maxlength="4000" placeholder="Message Data Detective..." aria-label="Message Data Detective"></textarea>
+    <button id="chatSend" class="send-button" type="submit" aria-label="Send message">↑</button>
+  </form>
+  <p class="chat-note">AI responses may make mistakes. Avoid sharing passwords or sensitive personal information.</p>
 </section>
-<section class="workspace">
-<div class="panel upload"><div class="panel-title"><div><small>STEP 01</small><h2>Bring your dataset</h2></div><div class="file-icon">CSV</div></div>
-<label class="drop" id="drop"><input id="file" type="file" accept=".csv,text/csv"><div class="upload-icon">↑</div><b>Drop your CSV here</b><span>or tap to browse · up to 12 MB</span><strong id="filename">No file selected</strong></label>
-<label class="field-label" for="question">What would you like to know?</label><textarea id="question" rows="3" placeholder="e.g. What are the total sales? Which region has the highest sales?"></textarea>
-<button id="analyze" class="primary">Analyze my data <span>→</span></button>
-<p class="privacy">🔒 Analysis runs with a free Python engine. No OpenAI API key or paid API credits are used. Avoid uploading sensitive personal information.</p></div>
-<div class="panel results"><div class="panel-title"><div><small>STEP 02</small><h2>Investigation room</h2></div><span class="status" id="status">Waiting for data</span></div>
-<div id="progress" class="progress hidden"><div class="spinner"></div><div><b id="progressTitle">Analyzing your CSV…</b><span id="progressText">Preparing your dataset</span></div></div>
-<div id="empty" class="empty"><div class="magnify">⌕</div><b>Your findings will appear here</b><span>Upload a CSV and ask your first question to begin.</span></div>
-<div id="answer" class="answer hidden"></div><section id="chartPanel" class="chart-panel hidden" aria-live="polite"><div class="chart-heading"><div><small>VISUAL INSIGHT</small><h3 id="chartTitle">Data chart</h3></div><span id="chartMeta"></span></div><div id="chartBars" class="chart-bars"></div><p class="chart-note">Grouped totals calculated locally from your uploaded CSV.</p></section><div id="reportLink" class="report-link hidden"><a id="downloadReport" href="#">↓ Download analysis report</a></div>
-<div id="followupBox" class="followup hidden"><label class="field-label" for="followup">Ask a follow-up in this session</label><div class="followrow"><input id="followup" placeholder="Ask another question…"><button id="sendFollowup">Send</button></div></div>
-</div></section>
-<footer>Data Detective · Free local Python CSV analysis · Not a general-purpose AI chatbot</footer>
-</main></div><script src="/static/app.js"></script>
-</body></html>
+
+<section class="workspace" id="data-workspace">
+  <div class="section-heading"><div><div class="eyebrow">DATA INVESTIGATION</div><h2>Explore your data</h2><p>Upload a CSV file and ask questions to find useful insights.</p></div><span class="step-chip">STEP 01 — 02</span></div>
+  <div class="workspace-grid">
+    <div class="panel upload">
+      <div class="panel-title"><div><small>01 / UPLOAD</small><h3>Bring your dataset</h3></div><div class="file-icon">CSV</div></div>
+      <label class="drop" id="drop"><input id="file" type="file" accept=".csv,text/csv"><div class="upload-icon">↑</div><b>Choose a CSV file</b><span>Tap to browse or drop your file here</span><strong id="filename">No file selected · up to 12 MB</strong></label>
+      <label class="field-label" for="question">What would you like to know?</label>
+      <textarea id="question" rows="3" placeholder="e.g. Which region has the highest sales?"></textarea>
+      <button id="analyze" class="analyze-button">Analyze my data <span>→</span></button>
+      <p class="privacy">🔒 Your CSV is analyzed by the free Python engine on this server. Avoid uploading sensitive personal information.</p>
+    </div>
+
+    <div class="panel results">
+      <div class="panel-title"><div><small>02 / RESULTS</small><h3>Investigation room</h3></div><span class="status" id="status">Waiting for data</span></div>
+      <div id="progress" class="progress hidden"><div class="spinner"></div><div><b id="progressTitle">Analyzing your CSV…</b><span id="progressText">Preparing your dataset</span></div></div>
+      <div id="empty" class="empty"><div class="magnify">⌕</div><b>Your findings will appear here</b><span>Upload a CSV and ask your first question to begin.</span></div>
+      <div id="answer" class="answer hidden"></div>
+      <section id="chartPanel" class="chart-panel hidden" aria-live="polite"><div class="chart-heading"><div><small>VISUAL INSIGHT</small><h3 id="chartTitle">Data chart</h3></div><span id="chartMeta"></span></div><div id="chartBars" class="chart-bars"></div><p class="chart-note">Grouped totals calculated locally from your uploaded CSV.</p></section>
+      <div id="reportLink" class="report-link hidden"><a id="downloadReport" href="#">↓ Download analysis report</a></div>
+      <div id="followupBox" class="followup hidden"><label class="field-label" for="followup">Ask a follow-up question</label><div class="followrow"><input id="followup" placeholder="Ask another question…"><button id="sendFollowup">Send</button></div></div>
+    </div>
+  </div>
+</section>
+<footer>Data Detective AI <span>·</span> Built to help you ask better questions and find clearer answers.</footer>
+</main>
+</div>
+</div>
+<script src="/static/app.js"></script>
+</body>
+</html>
