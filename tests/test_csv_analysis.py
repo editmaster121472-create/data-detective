@@ -1,5 +1,10 @@
 import io
+import os
+import re
 import unittest
+from unittest.mock import patch
+
+from werkzeug.security import generate_password_hash
 
 import server
 
@@ -58,6 +63,44 @@ class CsvAnalysisTests(unittest.TestCase):
     def test_empty_upload_is_rejected(self):
         response = self.client.post("/api/analyze", data={}, content_type="multipart/form-data")
         self.assertEqual(response.status_code, 400)
+
+    def test_owner_login_protects_dashboard_and_api(self):
+        password_hash = generate_password_hash("test-only-password")
+        settings = {
+            "OWNER_USERNAME": "test-owner",
+            "OWNER_PASSWORD_HASH": password_hash,
+            "SECRET_KEY": "test-session-secret",
+        }
+        with patch.dict(os.environ, settings):
+            server.app.secret_key = settings["SECRET_KEY"]
+            server.app.config["SESSION_COOKIE_SECURE"] = False
+            client = server.app.test_client()
+
+            dashboard = client.get("/")
+            self.assertEqual(dashboard.status_code, 302)
+            self.assertIn("/login", dashboard.headers["Location"])
+
+            denied = client.post("/api/chat", json={"message": "hello"})
+            self.assertEqual(denied.status_code, 401)
+
+            login_page = client.get("/login")
+            self.assertEqual(login_page.status_code, 200)
+            match = re.search(
+                r'name="csrf_token" value="([^"]+)"',
+                login_page.get_data(as_text=True),
+            )
+            self.assertIsNotNone(match)
+
+            signed_in = client.post(
+                "/login",
+                data={
+                    "csrf_token": match.group(1),
+                    "username": "test-owner",
+                    "password": "test-only-password",
+                },
+            )
+            self.assertEqual(signed_in.status_code, 302)
+            self.assertEqual(client.get("/").status_code, 200)
 
 
 if __name__ == "__main__":
