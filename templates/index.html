@@ -17,7 +17,7 @@
   <button id="clearChat" class="new-chat" type="button"><span>＋</span> New chat</button>
   <div class="side-label">YOUR WORKSPACE</div>
   <a class="side-link active" href="#assistant"><span>✳</span> AI Assistant</a>
-  <a class="side-link" href="#data-workspace"><span>▦</span> Data analysis</a>
+  <a class="side-link" href="#ai-studio"><span>✧</span> AI Studio</a>\n  <a class="side-link" href="#pdf-studio"><span>▤</span> PDF Studio</a>\n  <a class="side-link" href="#data-workspace"><span>▦</span> Data analysis</a>
   <div class="sidebar-bottom"><div class="status-dot"></div><div><b>Ready to investigate</b><small>AI assistant · CSV tools</small></div></div>
 </aside>
 
@@ -33,6 +33,31 @@
   <div class="eyebrow"><span class="eyebrow-dot"></span> YOUR AI INVESTIGATION PARTNER</div>
   <h1>What can I help you<br><span>discover today?</span></h1>
   <p>Ask anything, explore ideas, or uncover insights hidden in your data.</p>
+</section>
+
+<section class="studio-section" id="ai-studio">
+  <div class="section-heading"><div><div class="eyebrow">CREATIVE & PRODUCTIVITY WORKSPACE</div><h2>AI Studio</h2><p>Your tools for creating, editing, learning and getting work done.</p></div><span class="step-chip">CREATION HUB</span></div>
+  <div class="studio-grid">
+    <a class="studio-card studio-featured" href="#pdf-studio"><span class="studio-icon">▤</span><b>PDF Studio</b><small>Create a clean PDF from your text using your browser’s print-to-PDF feature.</small><em>Available now ↗</em></a>
+    <a class="studio-card" href="#assistant"><span class="studio-icon">✳</span><b>AI Chat & Research</b><small>Ask questions, learn, write, translate and brainstorm.</small><em>Available now ↗</em></a>
+    <a class="studio-card" href="#data-workspace"><span class="studio-icon">▦</span><b>Data & Excel</b><small>Analyze CSV files, discover patterns and view charts.</small><em>Available now ↗</em></a>
+    <div class="studio-card studio-planned"><span class="studio-icon">▣</span><b>Video Studio</b><small>Text-to-video, image-to-video, editing, captions and voice-over.</small><em>Needs video AI connection</em></div>
+    <div class="studio-card studio-planned"><span class="studio-icon">▧</span><b>Image Studio</b><small>Generate images, edit pictures, remove backgrounds and make thumbnails.</small><em>Needs image AI connection</em></div>
+    <div class="studio-card studio-planned"><span class="studio-icon">◉</span><b>Voice & Live</b><small>Talk naturally, hear answers and give spoken commands.</small><em>Voice basics available · live service needed</em></div>
+    <div class="studio-card studio-planned"><span class="studio-icon">▱</span><b>Documents & Slides</b><small>Create Word documents, presentations, notes and reports.</small><em>Next build stage</em></div>
+    <div class="studio-card studio-planned"><span class="studio-icon">⌁</span><b>Personal Agent</b><small>Gmail, YouTube, reminders and scheduled tasks.</small><em>Secure account connections needed</em></div>
+  </div>
+</section>
+
+<section class="pdf-studio" id="pdf-studio">
+  <div class="section-heading"><div><div class="eyebrow">DOCUMENT CREATOR</div><h2>PDF Studio</h2><p>Write or paste your content, then save it as a PDF from your browser.</p></div><span class="step-chip">WORKING TOOL</span></div>
+  <div class="panel pdf-panel">
+    <label class="field-label" for="pdfTitle">Document title</label>
+    <input id="pdfTitle" maxlength="120" placeholder="My document">
+    <label class="field-label" for="pdfContent">Your document text</label>
+    <textarea id="pdfContent" rows="9" maxlength="30000" placeholder="Write your report, notes, letter or study material here..."></textarea>
+    <div class="pdf-actions"><button id="makePdf" class="analyze-button" type="button">Create / Save PDF <span>↓</span></button><p class="privacy">Your text is formatted in this browser. Choose “Save as PDF” in the print dialog. No paid PDF API is used.</p></div>
+  </div>
 </section>
 
 <section class="chat-panel">
