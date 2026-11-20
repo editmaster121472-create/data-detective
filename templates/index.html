@@ -13,20 +13,24 @@
 </head>
 <body>
 <div class="app-shell">
-<aside class="sidebar">
+<aside class="sidebar" id="appSidebar" aria-label="Main navigation">
   <a class="brand" href="/" aria-label="Data Detective home"><span class="brand-mark">⌕</span><span class="brand-copy"><b>DATA DETECTIVE</b><small>AI workspace</small></span></a>
   <button id="clearChat" class="new-chat" type="button"><span>＋</span> New chat</button>
   <div class="side-label">YOUR WORKSPACE</div>
-  <a class="side-link active" href="#assistant"><span>✳</span> AI Assistant</a>
+  <a class="side-link active" href="#chat-section"><span>✳</span> AI Assistant</a>
   <a class="side-link" href="#task-inbox"><span>☑</span> Task Inbox</a>
   <a class="side-link" href="#ai-studio"><span>✧</span> AI Studio</a>
   <a class="side-link" href="#pdf-studio"><span>▤</span> PDF Studio</a>
+  <a class="side-link" href="#video-studio"><span>▣</span> Video Studio</a>
+  <a class="side-link" href="#image-studio"><span>▧</span> Image Studio</a>
   <a class="side-link" href="#data-workspace"><span>▦</span> Data analysis</a>
   <div class="sidebar-bottom"><div class="status-dot"></div><div><b>Ready to investigate</b><small>AI assistant · CSV tools</small></div></div>
 </aside>
 
+<button class="sidebar-backdrop" id="sidebarBackdrop" type="button" aria-label="Close navigation menu"></button>
 <div class="main-area">
 <header class="topbar">
+  <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open navigation menu" aria-controls="appSidebar" aria-expanded="false"><span></span><span></span><span></span></button>
   <div class="mobile-brand"><span class="brand-mark">⌕</span><b>DATA DETECTIVE</b></div>
   <div class="topbar-caption">Your intelligent workspace</div>
   <a class="sample-link" href="/api/sample"><span>↓</span> Sample CSV</a>
@@ -71,8 +75,8 @@
     <a class="studio-card studio-featured" href="#pdf-studio"><span class="studio-icon">▤</span><b>PDF Studio</b><small>Create a clean PDF from your text using your browser’s print-to-PDF feature.</small><em>Available now ↗</em></a>
     <a class="studio-card" href="#assistant"><span class="studio-icon">✳</span><b>AI Chat & Research</b><small>Ask questions, learn, write, translate and brainstorm.</small><em>Available now ↗</em></a>
     <a class="studio-card" href="#data-workspace"><span class="studio-icon">▦</span><b>Data & Excel</b><small>Analyze CSV files, discover patterns and view charts.</small><em>Available now ↗</em></a>
-    <div class="studio-card studio-planned"><span class="studio-icon">▣</span><b>Video Studio</b><small>Text-to-video, image-to-video, editing, captions and voice-over.</small><em>Needs video AI connection</em></div>
-    <div class="studio-card studio-planned"><span class="studio-icon">▧</span><b>Image Studio</b><small>Generate images, edit pictures, remove backgrounds and make thumbnails.</small><em>Needs image AI connection</em></div>
+    <div class="studio-card studio-planned" id="video-studio"><span class="studio-icon">▣</span><b>Video Studio</b><small>Text-to-video, image-to-video, editing, captions and voice-over.</small><em>Needs video AI connection</em></div>
+    <div class="studio-card studio-planned" id="image-studio"><span class="studio-icon">▧</span><b>Image Studio</b><small>Generate images, edit pictures, remove backgrounds and make thumbnails.</small><em>Needs image AI connection</em></div>
     <div class="studio-card studio-planned"><span class="studio-icon">◉</span><b>Voice & Live</b><small>Talk naturally, hear answers and give spoken commands.</small><em>Voice basics available · live service needed</em></div>
     <div class="studio-card studio-planned"><span class="studio-icon">▱</span><b>Documents & Slides</b><small>Create Word documents, presentations, notes and reports.</small><em>Next build stage</em></div>
     <div class="studio-card studio-planned"><span class="studio-icon">⌁</span><b>Personal Agent</b><small>Gmail, YouTube, reminders and scheduled tasks.</small><em>Secure account connections needed</em></div>
@@ -90,7 +94,7 @@
   </div>
 </section>
 
-<section class="chat-panel">
+<section class="chat-panel" id="chat-section">
   <div class="chat-head">
     <div class="assistant-identity"><div class="assistant-avatar">✳</div><div><h2>Data Detective</h2><p><span class="online-dot"></span> AI assistant is ready</p></div></div>
     <span class="model-chip">AI ASSISTANT</span>
