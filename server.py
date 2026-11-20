@@ -5,15 +5,25 @@ import io
 import json
 import re
 import uuid
+import secrets
 import urllib.request
 import urllib.error
 from collections import Counter, defaultdict
 from datetime import datetime
-from flask import Flask, request, jsonify, render_template, send_file, abort
+from flask import Flask, request, jsonify, render_template, send_file, abort, session, redirect, url_for
+from auth import auth_is_configured, owner_required, owner_is_authenticated, verify_owner_credentials
+from task_store import create_task, delete_task, list_tasks, update_task
+from functools import wraps
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
+app.secret_key = os.getenv("SECRET_KEY") or secrets.token_hex(32)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=os.getenv("SESSION_COOKIE_SECURE", "1").strip().lower() in ("1", "true", "yes"),
+)
 app.config["MAX_CONTENT_LENGTH"] = 12 * 1024 * 1024
 
 # Free local CSV analyzer. No API key or paid AI service is required.
@@ -168,8 +178,108 @@ def answer_question(rows, columns, question, profile):
     return " ".join(parts)
 
 @app.get("/")
+@owner_required
 def home():
-    return render_template("index.html")
+    csrf_token = secrets.token_urlsafe(32)
+    session["task_csrf"] = csrf_token
+    return render_template("index.html", task_csrf=csrf_token)
+
+
+def private_owner_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not auth_is_configured():
+            return jsonify({"error": "Configure private owner sign-in before using Task Inbox."}), 503
+        if not owner_is_authenticated():
+            return jsonify({"error": "Owner login required. Please sign in first."}), 401
+        if request.method in ("POST", "PATCH", "DELETE"):
+            expected = str(session.get("task_csrf", ""))
+            supplied = str(request.headers.get("X-CSRF-Token", ""))
+            if not expected or not supplied or not secrets.compare_digest(expected, supplied):
+                return jsonify({"error": "Security token expired. Refresh the page and try again."}), 403
+        return view(*args, **kwargs)
+    return wrapped
+
+
+@app.get("/api/tasks")
+@private_owner_required
+def get_tasks():
+    return jsonify({"tasks": list_tasks(session["owner_username"])})
+
+
+@app.post("/api/tasks")
+@private_owner_required
+def add_task():
+    data = request.get_json(silent=True) or {}
+    try:
+        task = create_task(
+            session["owner_username"],
+            data.get("title", ""),
+            data.get("description", ""),
+            data.get("due_at"),
+        )
+        return jsonify({"task": task}), 201
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.patch("/api/tasks/<task_id>")
+@private_owner_required
+def edit_task(task_id):
+    data = request.get_json(silent=True) or {}
+    try:
+        task = update_task(session["owner_username"], task_id, data)
+        if task is None:
+            return jsonify({"error": "Task not found."}), 404
+        return jsonify({"task": task})
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.delete("/api/tasks/<task_id>")
+@private_owner_required
+def remove_task(task_id):
+    if not delete_task(session["owner_username"], task_id):
+        return jsonify({"error": "Task not found."}), 404
+    return jsonify({"deleted": True})
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if not auth_is_configured():
+        return render_template(
+            "login.html", setup_required=True, error=None, csrf_token=""
+        ), 503
+
+    if request.method == "GET":
+        token = secrets.token_urlsafe(32)
+        session["login_csrf"] = token
+        return render_template(
+            "login.html", setup_required=False, error=None, csrf_token=token
+        )
+
+    submitted_token = str(request.form.get("csrf_token", ""))
+    expected_token = str(session.pop("login_csrf", ""))
+    if not expected_token or not secrets.compare_digest(expected_token, submitted_token):
+        return render_template(
+            "login.html", setup_required=False,
+            error="Your sign-in page expired. Refresh and try again.",
+            csrf_token=""
+        ), 400
+
+    username = request.form.get("username", "")
+    password = request.form.get("password", "")
+    if verify_owner_credentials(username, password):
+        session.clear()
+        session["owner_username"] = os.getenv("OWNER_USERNAME", "").strip()
+        return redirect(url_for("home"))
+
+    token = secrets.token_urlsafe(32)
+    session["login_csrf"] = token
+    return render_template(
+        "login.html", setup_required=False,
+        error="Username or password is incorrect.", csrf_token=token
+    ), 401
 
 @app.get("/api/sample")
 def sample():
@@ -179,6 +289,7 @@ def sample():
                      download_name="sample_sales.csv")
 
 @app.post("/api/analyze")
+@owner_required
 def analyze():
     uploaded = request.files.get("file")
     question = request.form.get("question", "")
@@ -199,6 +310,7 @@ def analyze():
         return jsonify({"error": f"Could not analyze this CSV: {exc}"}), 400
 
 @app.post("/api/followup/<session_id>")
+@owner_required
 def followup(session_id):
     data = request.get_json(silent=True) or {}
     question = str(data.get("question", ""))
@@ -211,6 +323,7 @@ def followup(session_id):
 
 
 @app.post("/api/chat")
+@owner_required
 def general_chat():
     data = request.get_json(silent=True) or {}
     message = str(data.get("message", "")).strip()
@@ -286,6 +399,7 @@ def general_chat():
         return jsonify({"error": "Could not connect to Groq. Please try again later."}), 502
 
 @app.get("/api/report/<session_id>")
+@owner_required
 def report(session_id):
     session = sessions.get(session_id)
     if not session:

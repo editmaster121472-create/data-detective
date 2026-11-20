@@ -7,7 +7,9 @@ Turn the existing Data Detective website into a private, voice-enabled personal 
 - Flask application with a general chat endpoint backed by Groq.
 - Local CSV analysis, chart data, follow-up questions, and downloadable reports.
 - Browser-side chat history and speech features.
-- No owner authentication, durable task store, Gmail OAuth, YouTube OAuth, background job runner, or durable long-term memory yet.
+- Owner password authentication and a private SQLite Task Inbox are implemented in this draft branch; they are not live until private environment settings are configured and the branch is deployed.
+- Task create/list/edit/complete/reopen/delete, owner scoping, CSRF-protected writes, and automated tests are included.
+- No durable assistant memory/preferences, recurring reminder scheduler, Gmail OAuth, YouTube OAuth, or background job runner yet.
 
 ## Build principles
 1. Build for one owner first; do not expose private email, tasks, or tokens publicly.
@@ -21,12 +23,16 @@ Turn the existing Data Detective website into a private, voice-enabled personal 
 ## Phased implementation
 
 ### Phase 1 — Private assistant foundation
-- Add owner-only authentication and secure session handling.
-- Add a persistent database for chat/task metadata and preferences.
-- Add a task inbox: create, view, edit, cancel, and mark tasks complete.
-- Add reminders and a task activity log.
+- [x] Add an owner-only Task Inbox backed by SQLite, with create/list/edit/complete/reopen/delete operations and CSRF protection.
+- [x] Add tests for task persistence, owner scoping, and protected task APIs.
+- [x] Add owner-only password authentication and secure signed sessions (host configuration still required).
+- [x] Add persistent SQLite storage for owner tasks.
+- [x] Add task inbox create, view, edit, complete/reopen, and delete operations.
+- [ ] Add logout/session expiry controls and durable assistant chat/preferences storage.
+- [ ] Add reminders/notifications and a task activity log.
 - Add clear permission controls and a safe approval queue.
-- Protect all private endpoints; no credentials or personal task data in browser local storage.
+- [x] Protect dashboard, chat, CSV, report, and Task Inbox routes when owner authentication is configured; Task Inbox fails closed if owner setup is absent.
+- [ ] Finish security review and live-host verification before deployment.
 
 **Acceptance:** unauthenticated visitors cannot read or change private assistant data; tasks survive app reloads; the CSV analyzer still works.
 
@@ -69,4 +75,4 @@ Turn the existing Data Detective website into a private, voice-enabled personal 
 - The owner must authorize Gmail and YouTube separately for this custom website; connecting apps inside ChatGPT does not connect them to this Flask app.
 
 ## Immediate next engineering step
-Implement Phase 1 in a separate Git branch, beginning with owner authentication and persistent task storage. Do not add Gmail/YouTube actions until private access control and approval logging are in place.
+Next: add a reliable scheduler and owner-controlled memory. Do not add Gmail/YouTube actions until private access control and approval logging are in place.

@@ -29,6 +29,7 @@ function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':
 /* General Gemini chat */
 const chatForm=$('chatForm'),chatInput=$('chatInput'),chatMessages=$('chatMessages');
 let chatHistory=[];
+let lastAssistantReply='';
 try{chatHistory=JSON.parse(localStorage.getItem('dd_chat_history')||'[]');if(!Array.isArray(chatHistory))chatHistory=[];}catch(_e){chatHistory=[];}
 function saveChat(){try{localStorage.setItem('dd_chat_history',JSON.stringify(chatHistory.slice(-40)));}catch(_e){}}
 function renderChat(){
@@ -37,6 +38,7 @@ function renderChat(){
   chatHistory.forEach(item=>{const bubble=document.createElement('div');bubble.className='chat-bubble '+(item.role==='user'?'chat-user':'chat-ai');bubble.textContent=item.content;chatMessages.appendChild(bubble);});
   chatMessages.scrollTop=chatMessages.scrollHeight;
 }
+lastAssistantReply=[...chatHistory].reverse().find(item=>item.role==='model')?.content||'';
 renderChat();
 chatForm.addEventListener('submit',async e=>{
   e.preventDefault();const message=chatInput.value.trim();if(!message)return;
@@ -52,7 +54,7 @@ chatForm.addEventListener('submit',async e=>{
     const error=document.createElement('div');error.className='chat-bubble chat-error';error.textContent=err.message;chatMessages.appendChild(error);if(window.dataDetectiveVoiceResume)window.dataDetectiveVoiceResume();
   }finally{$('chatSend').disabled=false;chatInput.focus();}
 });
-$('clearChat').addEventListener('click',()=>{chatHistory=[];saveChat();renderChat();});
+$('clearChat').addEventListener('click',()=>{chatHistory=[];lastAssistantReply='';saveChat();renderChat();});
 
 
 /* Hands-free voice conversation: listen, auto-send, speak, listen again */
@@ -63,7 +65,6 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];saveChat();renderCha
   voiceBar.innerHTML='<label class="voice-language-label" for="voiceLanguage">زبان</label><select id="voiceLanguage" aria-label="Voice language"><option value="ur-PK">اردو</option><option value="en-US">English</option></select><button type="button" id="voiceMode" class="voice-button">🎙️ گفتگو شروع کریں</button><button type="button" id="speakerMode" class="voice-button voice-toggle" aria-pressed="false">🔊 جواب سنیں</button>';
   chatForm.insertAdjacentElement('afterend',voiceBar);
   const language=$('voiceLanguage'), mode=$('voiceMode'), speaker=$('speakerMode');
-  let lastAssistantReply='';
   let speakerActive=false;
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   let recognition=null, voiceActive=false, voiceBusy=false, restarting=false;
@@ -171,4 +172,124 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];saveChat();renderCha
     voiceActive=true;voiceBusy=false;setButton();startListening();
   });
   setButton();
+})();
+
+/* Browser-based PDF creation: no server-side PDF service required. */
+(function setupPdfStudio(){
+  const button=$('makePdf'), titleField=$('pdfTitle'), bodyField=$('pdfContent');
+  if(!button||!titleField||!bodyField)return;
+  button.addEventListener('click',()=>{
+    const title=titleField.value.trim()||'My document';
+    const content=bodyField.value.trim();
+    if(!content){alert('Please write or paste some text first.');bodyField.focus();return;}
+    const win=window.open('','_blank');
+    if(!win){alert('Please allow pop-ups for this website, then try again.');return;}
+    const safe=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    win.document.open();
+    win.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+safe(title)+'</title><style>body{font-family:Arial,sans-serif;color:#171717;max-width:780px;margin:48px auto;padding:0 28px;line-height:1.65}h1{font-size:25px;border-bottom:1px solid #ddd;padding-bottom:14px}pre{font:14px/1.7 Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}@media print{body{margin:18mm auto;padding:0}}</style></head><body><h1>'+safe(title)+'</h1><pre>'+safe(content)+'</pre><script>window.onload=()=>window.print()<\/script></body></html>');
+    win.document.close();
+  });
+})();
+
+
+/* Private persistent Task Inbox */
+(function setupTaskInbox(){
+  const form=$('taskForm'), list=$('taskList');
+  if(!form||!list)return;
+  const csrf=document.querySelector('meta[name="dd-task-csrf"]')?.content||'';
+  let tasks=[];
+  const message=$('taskMessage');
+  function setMessage(text,isError=false){
+    message.textContent=text;
+    message.classList.toggle('task-message-error',isError);
+  }
+  function dueLabel(value){
+    if(!value)return 'No due date';
+    const date=new Date(value);
+    if(Number.isNaN(date.getTime()))return 'Due date unavailable';
+    return 'Due '+date.toLocaleString([], {dateStyle:'medium',timeStyle:'short'});
+  }
+  async function api(url,options={}){
+    const headers={...(options.headers||{})};
+    if(options.body){headers['Content-Type']='application/json';headers['X-CSRF-Token']=csrf;}
+    const response=await fetch(url,{...options,headers});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data.error||'Task request failed.');
+    return data;
+  }
+  function render(){
+    list.replaceChildren();
+    $('pendingCount').textContent=String(tasks.filter(t=>t.status==='pending').length);
+    $('completedCount').textContent=String(tasks.filter(t=>t.status==='completed').length);
+    if(!tasks.length){
+      const empty=document.createElement('div');empty.className='task-empty';
+      const strong=document.createElement('b');strong.textContent='Your inbox is clear';
+      const small=document.createElement('span');small.textContent='Add a task on the left and it will appear here.';
+      empty.append(strong,small);list.appendChild(empty);return;
+    }
+    tasks.forEach(task=>{
+      const card=document.createElement('article');card.className='task-item'+(task.status==='completed'?' task-done':'');
+      const main=document.createElement('div');main.className='task-main';
+      const title=document.createElement('b');title.className='task-title';title.textContent=task.title;
+      const details=document.createElement('p');details.textContent=task.description||'';
+      const due=document.createElement('small');due.className='task-due';due.textContent=dueLabel(task.due_at);
+      main.append(title);if(task.description)main.append(details);main.append(due);
+      const actions=document.createElement('div');actions.className='task-actions';
+      const toggle=document.createElement('button');toggle.type='button';toggle.className='task-action task-complete';
+      toggle.textContent=task.status==='completed'?'Reopen':'Complete';
+      toggle.addEventListener('click',()=>changeStatus(task,task.status==='completed'?'pending':'completed'));
+      const edit=document.createElement('button');edit.type='button';edit.className='task-action';edit.textContent='Edit';
+      edit.addEventListener('click',()=>editTask(task));
+      const remove=document.createElement('button');remove.type='button';remove.className='task-action task-delete';remove.textContent='Delete';
+      remove.addEventListener('click',()=>removeTask(task));
+      actions.append(toggle,edit,remove);card.append(main,actions);list.appendChild(card);
+    });
+  }
+  async function loadTasks(){
+    setMessage('Loading your private tasks…');
+    try{
+      const data=await api('/api/tasks');tasks=Array.isArray(data.tasks)?data.tasks:[];
+      render();setMessage(tasks.length?'Your tasks are saved securely.':'No tasks yet.');
+    }catch(error){
+      tasks=[];render();
+      if(error.message.includes('Owner login')||error.message.includes('Configure private owner')){
+        setMessage('Task Inbox is private. Complete the Owner Login setup in docs/OWNER_AUTH_SETUP.md, then sign in.',true);
+      }else setMessage(error.message,true);
+    }
+  }
+  form.addEventListener('submit',async event=>{
+    event.preventDefault();
+    const title=$('taskTitle').value.trim();
+    const description=$('taskDescription').value.trim();
+    const localDue=$('taskDue').value;
+    if(!title){$('taskTitle').focus();return;}
+    const dueAt=localDue?new Date(localDue).toISOString():null;
+    $('saveTask').disabled=true;setMessage('Saving your task…');
+    try{
+      await api('/api/tasks',{method:'POST',body:JSON.stringify({title,description,due_at:dueAt})});
+      form.reset();await loadTasks();setMessage('Task saved.');
+    }catch(error){setMessage(error.message,true);}
+    finally{$('saveTask').disabled=false;}
+  });
+  async function changeStatus(task,status){
+    try{await api('/api/tasks/'+encodeURIComponent(task.id),{method:'PATCH',body:JSON.stringify({status})});await loadTasks();}
+    catch(error){setMessage(error.message,true);}
+  }
+  async function editTask(task){
+    const title=prompt('Edit task title:',task.title);
+    if(title===null)return;
+    const description=prompt('Edit task details:',task.description||'');
+    if(description===null)return;
+    try{
+      await api('/api/tasks/'+encodeURIComponent(task.id),{method:'PATCH',body:JSON.stringify({title,description})});
+      await loadTasks();setMessage('Task updated.');
+    }catch(error){setMessage(error.message,true);}
+  }
+  async function removeTask(task){
+    if(!confirm('Delete this task permanently?'))return;
+    try{await api('/api/tasks/'+encodeURIComponent(task.id),{method:'DELETE',headers:{'X-CSRF-Token':csrf}});await loadTasks();setMessage('Task deleted.');}
+    catch(error){setMessage(error.message,true);}
+  }
+  $('refreshTasks').addEventListener('click',loadTasks);
+  loadTasks();
 })();
