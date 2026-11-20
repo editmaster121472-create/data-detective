@@ -11,7 +11,9 @@ import urllib.error
 from collections import Counter, defaultdict
 from datetime import datetime
 from flask import Flask, request, jsonify, render_template, send_file, abort, session, redirect, url_for
-from auth import auth_is_configured, owner_required, verify_owner_credentials
+from auth import auth_is_configured, owner_required, owner_is_authenticated, verify_owner_credentials
+from task_store import create_task, delete_task, list_tasks, update_task
+from functools import wraps
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
@@ -178,7 +180,66 @@ def answer_question(rows, columns, question, profile):
 @app.get("/")
 @owner_required
 def home():
-    return render_template("index.html")
+    csrf_token = secrets.token_urlsafe(32)
+    session["task_csrf"] = csrf_token
+    return render_template("index.html", task_csrf=csrf_token)
+
+
+def private_owner_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not auth_is_configured():
+            return jsonify({"error": "Configure private owner sign-in before using Task Inbox."}), 503
+        if not owner_is_authenticated():
+            return jsonify({"error": "Owner login required. Please sign in first."}), 401
+        if request.method in ("POST", "PATCH", "DELETE"):
+            expected = str(session.get("task_csrf", ""))
+            supplied = str(request.headers.get("X-CSRF-Token", ""))
+            if not expected or not supplied or not secrets.compare_digest(expected, supplied):
+                return jsonify({"error": "Security token expired. Refresh the page and try again."}), 403
+        return view(*args, **kwargs)
+    return wrapped
+
+
+@app.get("/api/tasks")
+@private_owner_required
+def get_tasks():
+    return jsonify({"tasks": list_tasks(session["owner_username"])})
+
+
+@app.post("/api/tasks")
+@private_owner_required
+def add_task():
+    data = request.get_json(silent=True) or {}
+    try:
+        task = create_task(
+            session["owner_username"],
+            data.get("title", ""),
+            data.get("description", ""),
+            data.get("due_at"),
+        )
+        return jsonify({"task": task}), 201
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+
+
+@app.patch("/api/tasks/<task_id>")
+@private_owner_required
+def edit_task(task_id):
+    data = request.get_json(silent=True) or {}
+    try:
+        task = update_task(session["owner_username"], task_id, data)
+        if task is None:
+            return jsonify({"error": "Task not found."}), 404
+        return jsonify({"task": task})
+
+
+@app.delete("/api/tasks/<task_id>")
+@private_owner_required
+def remove_task(task_id):
+    if not delete_task(session["owner_username"], task_id):
+        return jsonify({"error": "Task not found."}), 404
+    return jsonify({"deleted": True})
 
 
 @app.route("/login", methods=["GET", "POST"])
