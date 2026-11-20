@@ -26,3 +26,14 @@
 .chat-compose{display:flex;gap:10px;align-items:stretch;margin-top:12px}.chat-compose textarea{min-width:0;flex:1;resize:vertical}.chat-compose .primary{width:auto;min-width:90px;margin:0}
 .chat-note{margin:10px 0 0}
 @media(max-width:600px){.chat-panel{padding:17px}.chat-compose{flex-direction:column}.chat-compose .primary{width:100%}.chat-bubble{max-width:96%}}
+
+
+/* Voice chat controls */
+.voice-tools{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:10px}
+.voice-language-label{font-size:11px;color:var(--muted)}
+.voice-tools select{width:auto;min-width:100px;background:#091722;color:#eff8f7;border:1px solid #2b4355;border-radius:9px;padding:10px;font:inherit;font-size:12px}
+.voice-button{border:1px solid #37675f;background:#12332f;color:#baffea;border-radius:10px;padding:10px 13px;font-size:12px;font-weight:700;cursor:pointer}
+.voice-button:disabled{opacity:.55;cursor:not-allowed}
+.voice-button.voice-active{background:#5a282d;border-color:#a84d58;color:#ffe2e2}
+.voice-toggle[aria-pressed="true"]{background:#1c5146;border-color:#72e0bd}
+@media(max-width:600px){.voice-tools{gap:7px}.voice-tools select{flex:1}.voice-button{flex:1}}
