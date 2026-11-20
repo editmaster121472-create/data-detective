@@ -327,3 +327,99 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];lastAssistantReply='
   else{field.setCustomValidity('No matching tool found. Try Chat, Image, Video, PDF or Tasks.');field.reportValidity();setTimeout(()=>field.setCustomValidity(''),2200);}
  });
 })();
+
+
+/* Replicate Image & Video Studio */
+(function () {
+  const byId = (id) => document.getElementById(id);
+  const historyKey = "dd-creative-history-v1";
+  function setStatus(kind, message) {
+    const node = byId(kind + "Status");
+    if (node) node.textContent = message;
+  }
+  function remember(kind, url) {
+    try {
+      const items = JSON.parse(localStorage.getItem(historyKey) || "[]");
+      items.unshift({kind, url, at: new Date().toISOString()});
+      localStorage.setItem(historyKey, JSON.stringify(items.slice(0, 12)));
+    } catch (_) {}
+  }
+  function showOutput(kind, output) {
+    const box = byId(kind + "Result");
+    box.replaceChildren();
+    const urls = Array.isArray(output) ? output : [output];
+    urls.filter(x => typeof x === "string" && /^https:\/\//i.test(x)).forEach(url => {
+      let media;
+      if (kind === "video") {
+        media = document.createElement("video");
+        media.controls = true;
+        media.playsInline = true;
+        media.src = url;
+      } else {
+        media = document.createElement("img");
+        media.alt = "Generated image";
+        media.src = url;
+      }
+      box.appendChild(media);
+      const link = document.createElement("a");
+      link.href = url; link.target = "_blank"; link.rel = "noopener";
+      link.textContent = "Open generated " + kind;
+      box.appendChild(link);
+      remember(kind, url);
+    });
+  }
+  async function waitForPrediction(kind, prediction) {
+    let current = prediction;
+    const id = current.id;
+    for (let i = 0; i < 75; i++) {
+      if (current.status === "succeeded") {
+        showOutput(kind, current.output);
+        setStatus(kind, "Completed. Your " + kind + " is ready.");
+        return;
+      }
+      if (["failed", "canceled"].includes(current.status)) {
+        throw new Error(current.error || ("Generation " + current.status + "."));
+      }
+      setStatus(kind, "Generating… " + (current.status || "starting") + " (" + (i + 1) + "/75)");
+      await new Promise(resolve => setTimeout(resolve, 4000));
+      const response = await fetch("/api/creative/status/" + encodeURIComponent(id));
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Could not check generation status.");
+      current = data.prediction;
+    }
+    setStatus(kind, "Still processing. You can check again later; this request may continue on Replicate.");
+  }
+  async function generate(kind) {
+    const isImage = kind === "image";
+    const button = byId(isImage ? "generateImage" : "generateVideo");
+    const prompt = byId(isImage ? "imagePrompt" : "videoPrompt").value.trim();
+    if (!prompt) { setStatus(kind, "Please write a description first."); return; }
+    const form = new FormData();
+    form.append("prompt", prompt);
+    const fileInput = byId(isImage ? "imageReference" : "videoReference");
+    if (fileInput.files[0]) form.append("reference", fileInput.files[0]);
+    if (isImage) form.append("aspect_ratio", byId("imageRatio").value);
+    button.disabled = true;
+    setStatus(kind, "Sending your request securely to Replicate…");
+    byId(kind + "Result").replaceChildren();
+    try {
+      const response = await fetch("/api/creative/" + kind, {method: "POST", body: form});
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Generation request failed.");
+      await waitForPrediction(kind, data.prediction);
+    } catch (error) {
+      setStatus(kind, error.message || "Something went wrong. Please try again.");
+    } finally {
+      button.disabled = false;
+    }
+  }
+  byId("generateImage")?.addEventListener("click", () => generate("image"));
+  byId("generateVideo")?.addEventListener("click", () => generate("video"));
+  fetch("/api/creative/config").then(r => r.json()).then(config => {
+    setStatus("image", config.configured ? "Image service connected. Generation may use paid credits after any free trial." : "Replicate token not detected by this server yet.");
+    setStatus("video", config.configured ? "Video service connected. Video generation may cost more credits." : "Replicate token not detected by this server yet.");
+  }).catch(() => {
+    setStatus("image", "Could not check Replicate connection.");
+    setStatus("video", "Could not check Replicate connection.");
+  });
+})();
