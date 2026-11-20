@@ -1,6 +1,6 @@
 # Private owner sign-in setup
 
-The personal-assistant dashboard and its chat/CSV API routes can be restricted to one owner. Authentication is activated only when all three settings below exist in the server's private environment:
+The personal-assistant dashboard, chat/CSV API routes, and Task Inbox are designed for one owner. Authentication is activated only when all three settings below exist in the server's private environment. Task Inbox always fails closed until this setup is complete:
 
 - `OWNER_USERNAME`: the owner's chosen login name.
 - `OWNER_PASSWORD_HASH`: a Werkzeug password hash, never the plain password.
@@ -36,5 +36,6 @@ After saving the file, reload the PythonAnywhere web app. The dashboard will the
 
 - If the three required settings are absent, the app preserves its existing demo behaviour so the owner is not accidentally locked out before setup.
 - This is single-owner password authentication, not multi-factor authentication.
-- Gmail, YouTube, persistent tasks, durable memory, and background scheduling are separate later stages and are not enabled by this sign-in foundation.
+- The SQLite Task Inbox is included in this draft and requires owner sign-in. Due dates are saved and displayed, but automatic notifications and background scheduling are not included yet.
+- Gmail, YouTube, and durable assistant memory are separate later stages.
 - Do not deploy this branch until the owner has added the private settings and tested sign-in on the live host.
