@@ -408,7 +408,7 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];lastAssistantReply='
       if (!response.ok) throw new Error(data.error || "Generation request failed.");
       if (kind === "image" && data.image_data) {
         showOutput("image", data.image_data);
-        setStatus("image", "Image created with Cloudflare Workers AI. Free daily quota applies.");
+        setStatus("image", "Image created with Pollinations AI.");
       } else {
         await waitForPrediction(kind, data.prediction);
       }
@@ -421,7 +421,7 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];lastAssistantReply='
   byId("generateImage")?.addEventListener("click", () => generate("image"));
   byId("generateVideo")?.addEventListener("click", () => generate("video"));
   fetch("/api/creative/config").then(r => r.json()).then(config => {
-    setStatus("image", config.image_provider === "cloudflare" ? "Free Cloudflare image service connected. Daily quota applies; reference-image editing is not included." : (config.image_provider === "replicate" ? "Replicate image service connected. Generation may use paid credits." : "Add Cloudflare credentials to enable the free image option."));
+    setStatus("image", config.image_provider === "pollinations" ? "Pollinations image service connected. Check your account balance before generating." : "Add your Pollinations API key to enable image generation.");
     setStatus("video", config.video_configured ? "Replicate video service connected. Video generation may cost credits." : "Video service not configured; Replicate token needed.");
   }).catch(() => {
     setStatus("image", "Could not check image service connection.");
