@@ -293,3 +293,23 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];lastAssistantReply='
   $('refreshTasks').addEventListener('click',loadTasks);
   loadTasks();
 })();
+
+
+/* Accessible mobile side navigation */
+(function setupMobileSidebar(){
+  const toggle=$('menuToggle'), sidebar=$('appSidebar'), backdrop=$('sidebarBackdrop');
+  if(!toggle||!sidebar||!backdrop)return;
+  function setOpen(open){
+    document.body.classList.toggle('menu-open',open);
+    toggle.setAttribute('aria-expanded',String(open));
+    toggle.setAttribute('aria-label',open?'Close navigation menu':'Open navigation menu');
+  }
+  toggle.addEventListener('click',()=>setOpen(toggle.getAttribute('aria-expanded')!=='true'));
+  backdrop.addEventListener('click',()=>setOpen(false));
+  sidebar.querySelectorAll('a[href^="#"]').forEach(link=>{
+    link.addEventListener('click',()=>setOpen(false));
+  });
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape')setOpen(false);
+  });
+})();
