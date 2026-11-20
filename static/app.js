@@ -313,3 +313,17 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];lastAssistantReply='
     if(event.key==='Escape')setOpen(false);
   });
 })();
+
+
+/* Workspace quick search: jump to the best matching tool or section. */
+(function setupWorkspaceSearch(){
+ const field=$('workspaceSearch'); if(!field)return;
+ field.addEventListener('keydown',event=>{
+  if(event.key!=='Enter')return;
+  const query=field.value.trim().toLowerCase();if(!query)return;
+  const candidates=[...document.querySelectorAll('.side-link,.studio-card,.section-heading, .founder-panel')];
+  const match=candidates.find(node=>node.textContent.toLowerCase().includes(query));
+  if(match){const target=match.closest('section')||match;if(target.id)document.getElementById(target.id)?.scrollIntoView({behavior:'smooth',block:'start'});else target.scrollIntoView({behavior:'smooth',block:'center'});}
+  else{field.setCustomValidity('No matching tool found. Try Chat, Image, Video, PDF or Tasks.');field.reportValidity();setTimeout(()=>field.setCustomValidity(''),2200);}
+ });
+})();
