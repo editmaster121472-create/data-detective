@@ -232,6 +232,8 @@ def edit_task(task_id):
         if task is None:
             return jsonify({"error": "Task not found."}), 404
         return jsonify({"task": task})
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
 
 
 @app.delete("/api/tasks/<task_id>")
