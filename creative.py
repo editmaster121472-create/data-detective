@@ -8,6 +8,7 @@ import os
 import re
 import urllib.error
 import urllib.request
+import urllib.parse
 import uuid
 
 from flask import Blueprint, jsonify, request, session
@@ -20,33 +21,31 @@ def _token():
     return os.getenv("REPLICATE_API_TOKEN", "").strip()
 
 
-def _cloudflare_credentials():
-    return (os.getenv("CLOUDFLARE_ACCOUNT_ID", "").strip(),
-            os.getenv("CLOUDFLARE_API_TOKEN", "").strip())
+def _pollinations_key():
+    return os.getenv("POLLINATIONS_API_KEY", "").strip()
 
 
-def _cloudflare_image(prompt):
-    account_id, api_token = _cloudflare_credentials()
-    if not account_id or not api_token:
-        raise RuntimeError("Free image service is not configured. Add CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN to the private .env file.")
-    url = ("https://api.cloudflare.com/client/v4/accounts/" + account_id +
-           "/ai/run/@cf/black-forest-labs/flux-1-schnell")
-    payload = json.dumps({"prompt": prompt[:2048], "steps": 4}).encode("utf-8")
-    req = urllib.request.Request(url, data=payload, headers={
-        "Authorization": "Bearer " + api_token,
-        "Content-Type": "application/json",
-    }, method="POST")
+def _pollinations_image(prompt):
+    api_key = _pollinations_key()
+    if not api_key:
+        raise RuntimeError("Pollinations API key is not configured. Add POLLINATIONS_API_KEY to the private .env file.")
+    url = "https://gen.pollinations.ai/image/" + urllib.parse.quote(prompt, safe="") + "?model=flux"
+    req = urllib.request.Request(url, headers={
+        "Authorization": "Bearer " + api_key,
+        "Accept": "image/*",
+    }, method="GET")
     try:
         with urllib.request.urlopen(req, timeout=120) as response:
-            result = json.loads(response.read().decode("utf-8"))
+            image_bytes = response.read(12 * 1024 * 1024 + 1)
+            content_type = response.headers.get("Content-Type", "image/jpeg").split(";")[0]
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError("Cloudflare image service HTTP " + str(exc.code) + ": " + detail[:400])
-    image = result.get("result", {}).get("image")
-    if not image:
-        raise RuntimeError("Cloudflare did not return an image. Check the API token permissions and daily free quota.")
-    return "data:image/jpeg;base64," + image
-
+        raise RuntimeError("Pollinations image service HTTP " + str(exc.code) + ": " + detail[:400])
+    if len(image_bytes) > 12 * 1024 * 1024:
+        raise RuntimeError("Generated image is larger than the 12 MB limit.")
+    if not content_type.startswith("image/"):
+        raise RuntimeError("Pollinations did not return an image.")
+    return "data:" + content_type + ";base64," + base64.b64encode(image_bytes).decode("ascii")
 
 def _model(env_name, default):
     value = os.getenv(env_name, default).strip()
@@ -102,14 +101,13 @@ def _image_data_url(upload):
 
 @creative_bp.get("/api/creative/config")
 def creative_config():
-    account_id, cloudflare_token = _cloudflare_credentials()
-    image_provider = "cloudflare" if account_id and cloudflare_token else "none"
+    pollinations_key = _pollinations_key()
     return jsonify({
-        "configured": bool(_token() or (account_id and cloudflare_token)),
-        "image_configured": image_provider != "none",
-        "image_provider": image_provider,
+        "configured": bool(_token() or pollinations_key),
+        "image_configured": bool(pollinations_key),
+        "image_provider": "pollinations" if pollinations_key else "none",
         "video_configured": bool(_token()),
-        "image_model": "@cf/black-forest-labs/flux-1-schnell" if image_provider == "cloudflare" else os.getenv("REPLICATE_IMAGE_MODEL", "black-forest-labs/flux-schnell"),
+        "image_model": "flux",
         "video_model": os.getenv("REPLICATE_VIDEO_MODEL", "minimax/video-01"),
     })
 
@@ -121,15 +119,12 @@ def generate_image():
     if not prompt or len(prompt) > 1800:
         return jsonify({"error": "Write an image prompt (maximum 1,800 characters)."}), 400
     try:
-        account_id, cloudflare_token = _cloudflare_credentials()
-        if not (account_id and cloudflare_token):
-            return jsonify({"error": "Free image generation is not configured yet. Add CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN to the private .env file. Paid Replicate image generation is disabled to protect your balance."}), 503
+        if not _pollinations_key():
+            return jsonify({"error": "Pollinations image generation is not configured. Add POLLINATIONS_API_KEY to the private .env file. No paid Replicate image fallback will be used."}), 503
         if request.files.get("reference") and request.files["reference"].filename:
-            return jsonify({"error": "The free Cloudflare image option currently supports text-to-image only. Remove the reference image or use a separately enabled paid provider."}), 400
-        image_data = _cloudflare_image(prompt)
-        return jsonify({"image_data": image_data, "provider": "cloudflare"}), 200
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
+            return jsonify({"error": "Pollinations image generation currently supports text-to-image in this studio. Remove the reference image."}), 400
+        image_data = _pollinations_image(prompt)
+        return jsonify({"image_data": image_data, "provider": "pollinations"}), 200
     except Exception as exc:
         return jsonify({"error": str(exc)}), 502
 
