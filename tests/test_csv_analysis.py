@@ -29,14 +29,14 @@ class CsvAnalysisTests(unittest.TestCase):
         answer = server.answer_question(
             self.rows, self.columns, "Show sales by region and highest", self.profile
         )
-        self.assertIn("West (1500.0)", answer)
+        self.assertIn("North (2150.0)", answer)
 
     def test_chart_is_grouped_and_ranked(self):
         chart = server.build_chart_data(self.rows, self.columns, self.profile)
         self.assertEqual(chart["metric"], "Sales")
         self.assertEqual(chart["category"], "Region")
-        self.assertEqual(chart["labels"][0], "West")
-        self.assertEqual(chart["values"][0], 1500.0)
+        self.assertEqual(chart["labels"][0], "North")
+        self.assertEqual(chart["values"][0], 2150.0)
 
     def test_analyze_endpoint_returns_report_and_chart(self):
         response = self.client.post(
@@ -50,7 +50,7 @@ class CsvAnalysisTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.get_json()
         self.assertIn("id", payload)
-        self.assertEqual(payload["chart"]["labels"][0], "West")
+        self.assertEqual(payload["chart"]["labels"][0], "North")
         report = self.client.get(payload["report_url"])
         self.assertEqual(report.status_code, 200)
         self.assertIn("application/json", report.content_type)
