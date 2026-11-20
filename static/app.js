@@ -46,7 +46,7 @@ chatForm.addEventListener('submit',async e=>{
   try{
     const response=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,history:previous})});
     const data=await response.json();if(!response.ok)throw new Error(data.error||'Chat request failed');
-    chatHistory.push({role:'model',content:data.answer});saveChat();renderChat();if(window.dataDetectiveSpeakReply)window.dataDetectiveSpeakReply(data.answer);
+    chatHistory.push({role:'model',content:data.answer});lastAssistantReply=data.answer;saveChat();renderChat();if(window.dataDetectiveSpeakReply)window.dataDetectiveSpeakReply(data.answer);
   }catch(err){
     chatHistory.pop();saveChat();renderChat();
     const error=document.createElement('div');error.className='chat-bubble chat-error';error.textContent=err.message;chatMessages.appendChild(error);if(window.dataDetectiveVoiceResume)window.dataDetectiveVoiceResume();
@@ -60,9 +60,11 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];saveChat();renderCha
   if(!chatForm || !chatInput || !chatMessages) return;
   const voiceBar=document.createElement('div');
   voiceBar.className='voice-tools';
-  voiceBar.innerHTML='<label class="voice-language-label" for="voiceLanguage">زبان</label><select id="voiceLanguage" aria-label="Voice language"><option value="ur-PK">اردو</option><option value="en-US">English</option></select><button type="button" id="voiceMode" class="voice-button">🎙️ گفتگو شروع کریں</button>';
+  voiceBar.innerHTML='<label class="voice-language-label" for="voiceLanguage">زبان</label><select id="voiceLanguage" aria-label="Voice language"><option value="ur-PK">اردو</option><option value="en-US">English</option></select><button type="button" id="voiceMode" class="voice-button">🎙️ گفتگو شروع کریں</button><button type="button" id="speakerMode" class="voice-button voice-toggle" aria-pressed="false">🔊 جواب سنیں</button>';
   chatForm.insertAdjacentElement('afterend',voiceBar);
-  const language=$('voiceLanguage'), mode=$('voiceMode');
+  const language=$('voiceLanguage'), mode=$('voiceMode'), speaker=$('speakerMode');
+  let lastAssistantReply='';
+  let speakerActive=false;
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
   let recognition=null, voiceActive=false, voiceBusy=false, restarting=false;
   function setButton(){
@@ -81,6 +83,8 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];saveChat();renderCha
   }
   function stopSpeaking(){
     if('speechSynthesis' in window) window.speechSynthesis.cancel();
+    speakerActive=false;
+    if(speaker){speaker.textContent='🔊 جواب سنیں';speaker.setAttribute('aria-pressed','false');}
   }
   function cleanSpeechText(value){
     return String(value||'')
@@ -106,14 +110,21 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];saveChat();renderCha
     const voices=window.speechSynthesis.getVoices();
     const preferred=voices.find(v=>isUrdu?/^ur([_-]|$)/i.test(v.lang):/^en([_-]|$)/i.test(v.lang));
     if(preferred)utterance.voice=preferred;
-    utterance.onend=()=>{if(voiceActive){voiceBusy=false;startListening();}};
-    utterance.onerror=()=>{if(voiceActive){voiceBusy=false;startListening();}};
+    utterance.onend=()=>{speakerActive=false;if(speaker){speaker.textContent='🔊 جواب سنیں';speaker.setAttribute('aria-pressed','false');}if(voiceActive){voiceBusy=false;startListening();}};
+    utterance.onerror=()=>{speakerActive=false;if(speaker){speaker.textContent='🔊 جواب سنیں';speaker.setAttribute('aria-pressed','false');}if(voiceActive){voiceBusy=false;startListening();}};
     window.speechSynthesis.speak(utterance);
     return true;
   }
   window.dataDetectiveSpeakReply=(answer)=>{
     if(voiceActive){if(!speakText(answer)){voiceBusy=false;startListening();}}
   };
+  speaker.addEventListener('click',()=>{
+    if(speakerActive){stopSpeaking();return;}
+    if(!lastAssistantReply){speaker.textContent='پہلے جواب حاصل کریں';setTimeout(()=>{if(!speakerActive)speaker.textContent='🔊 جواب سنیں';},1600);return;}
+    speakerActive=speakText(lastAssistantReply);
+    speaker.textContent=speakerActive?'⏹️ آواز بند کریں':'🔊 جواب سنیں';
+    speaker.setAttribute('aria-pressed',String(speakerActive));
+  });
   window.dataDetectiveVoiceResume=()=>{
     if(voiceActive){voiceBusy=false;startListening();}
   };
