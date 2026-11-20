@@ -21,6 +21,8 @@ Turn the existing Data Detective website into a private, voice-enabled personal 
 ## Phased implementation
 
 ### Phase 1 — Private assistant foundation
+- [x] Add an owner-only Task Inbox backed by SQLite, with create/list/edit/complete/reopen/delete operations and CSRF protection.
+- [x] Add tests for task persistence, owner scoping, and protected task APIs.
 - Add owner-only authentication and secure session handling.
 - Add a persistent database for chat/task metadata and preferences.
 - Add a task inbox: create, view, edit, cancel, and mark tasks complete.
