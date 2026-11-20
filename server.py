@@ -267,8 +267,19 @@ def general_chat():
         return jsonify({"answer": answer})
     except urllib.error.HTTPError as exc:
         details = exc.read().decode("utf-8", errors="replace")
+        provider_message = "No additional details were returned."
+        try:
+            provider_error = json.loads(details).get("error", {})
+            if isinstance(provider_error, dict):
+                parts = [str(provider_error.get(k, "")).strip() for k in ("message", "code", "type")]
+                provider_message = " | ".join(part for part in parts if part) or provider_message
+            elif provider_error:
+                provider_message = str(provider_error)[:500]
+        except Exception:
+            if details.strip():
+                provider_message = details.strip()[:500]
         app.logger.error("Groq chat request failed with HTTP %s: %s", exc.code, details[:1000])
-        return jsonify({"error": "Groq could not answer this request (HTTP " + str(exc.code) + "). Please check your API key, model access, and usage limits."}), 502
+        return jsonify({"error": "Groq returned HTTP " + str(exc.code) + ". Details: " + provider_message}), 502
     except Exception:
         app.logger.exception("Groq chat request failed")
         return jsonify({"error": "Could not connect to Groq. Please try again later."}), 502
