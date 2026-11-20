@@ -103,7 +103,7 @@ def _image_data_url(upload):
 @creative_bp.get("/api/creative/config")
 def creative_config():
     account_id, cloudflare_token = _cloudflare_credentials()
-    image_provider = "cloudflare" if account_id and cloudflare_token else ("replicate" if _token() else "none")
+    image_provider = "cloudflare" if account_id and cloudflare_token else "none"
     return jsonify({
         "configured": bool(_token() or (account_id and cloudflare_token)),
         "image_configured": image_provider != "none",
@@ -122,11 +122,12 @@ def generate_image():
         return jsonify({"error": "Write an image prompt (maximum 1,800 characters)."}), 400
     try:
         account_id, cloudflare_token = _cloudflare_credentials()
-        if account_id and cloudflare_token:
-            if request.files.get("reference") and request.files["reference"].filename:
-                return jsonify({"error": "The free Cloudflare image option currently supports text-to-image only. Reference-image editing remains on the optional Replicate service."}), 400
-            image_data = _cloudflare_image(prompt)
-            return jsonify({"image_data": image_data, "provider": "cloudflare"}), 200
+        if not (account_id and cloudflare_token):
+            return jsonify({"error": "Free image generation is not configured yet. Add CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN to the private .env file. Paid Replicate image generation is disabled to protect your balance."}), 503
+        if request.files.get("reference") and request.files["reference"].filename:
+            return jsonify({"error": "The free Cloudflare image option currently supports text-to-image only. Remove the reference image or use a separately enabled paid provider."}), 400
+        image_data = _cloudflare_image(prompt)
+        return jsonify({"image_data": image_data, "provider": "cloudflare"}), 200
         inputs = {"prompt": prompt, "aspect_ratio": data.get("aspect_ratio", "1:1"),
                   "output_format": "webp"}
         if inputs["aspect_ratio"] not in ("1:1", "16:9", "9:16", "4:3", "3:4"):
