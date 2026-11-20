@@ -172,3 +172,20 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];saveChat();renderCha
   });
   setButton();
 })();
+
+/* Browser-based PDF creation: no server-side PDF service required. */
+(function setupPdfStudio(){
+  const button=$('makePdf'), titleField=$('pdfTitle'), bodyField=$('pdfContent');
+  if(!button||!titleField||!bodyField)return;
+  button.addEventListener('click',()=>{
+    const title=titleField.value.trim()||'My document';
+    const content=bodyField.value.trim();
+    if(!content){alert('Please write or paste some text first.');bodyField.focus();return;}
+    const win=window.open('','_blank');
+    if(!win){alert('Please allow pop-ups for this website, then try again.');return;}
+    const safe=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    win.document.open();
+    win.document.write('<!doctype html><html><head><meta charset="utf-8"><title>'+safe(title)+'</title><style>body{font-family:Arial,sans-serif;color:#171717;max-width:780px;margin:48px auto;padding:0 28px;line-height:1.65}h1{font-size:25px;border-bottom:1px solid #ddd;padding-bottom:14px}pre{font:14px/1.7 Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}@media print{body{margin:18mm auto;padding:0}}</style></head><body><h1>'+safe(title)+'</h1><pre>'+safe(content)+'</pre><script>window.onload=()=>window.print()<\/script></body></html>');
+    win.document.close();
+  });
+})();
