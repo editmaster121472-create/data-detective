@@ -254,7 +254,8 @@ def general_chat():
         data=json.dumps(payload).encode("utf-8"),
         headers={
             "Authorization": "Bearer " + api_key,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "User-Agent": "DataDetectiveAI/1.0"
         },
         method="POST"
     )
