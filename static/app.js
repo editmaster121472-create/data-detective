@@ -97,10 +97,26 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];saveChat();renderCha
     });
   }
   function stopSpeaking(){if('speechSynthesis' in window) window.speechSynthesis.cancel();}
+  function cleanSpeechText(value){
+    return String(value||'')
+      .replace(/```[\s\S]*?```/g,' ')
+      .replace(/`([^`]+)`/g,'$1')
+      .replace(/!\[([^\]]*)\]\([^)]+\)/g,'$1')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g,'$1')
+      .replace(/https?:\/\/\S+/gi,' ')
+      .replace(/<[^>]*>/g,' ')
+      .replace(/^\s{0,3}#{1,6}\s*/gm,'')
+      .replace(/^\s*[-+>]\s+/gm,'')
+      .replace(/[*_~|\\/]+/g,' ')
+      .replace(/\s+/g,' ')
+      .trim();
+  }
   function speakText(text){
     if(!speakReplies||!('speechSynthesis' in window)||!text) return;
+    const cleanText=cleanSpeechText(text);
+    if(!cleanText) return;
     stopSpeaking();
-    const utterance=new SpeechSynthesisUtterance(text);
+    const utterance=new SpeechSynthesisUtterance(cleanText);
     const isUrdu=/[\u0600-\u06FF]/.test(text);
     utterance.lang=isUrdu?'ur-PK':'en-US';
     const voices=window.speechSynthesis.getVoices();
