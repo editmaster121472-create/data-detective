@@ -2,6 +2,8 @@ package com.datadetective.ai;
 
 import android.Manifest;
 import android.app.Activity;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.provider.AlarmClock;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
@@ -77,67 +79,161 @@ public class MainActivity extends Activity {
             requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQ_AUDIO);
     }
 
+    private GradientDrawable shape(int color, int stroke, int radius) {
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(color);
+        d.setCornerRadius(radius);
+        if (stroke != 0) d.setStroke(1, stroke);
+        return d;
+    }
+
+    private TextView label(String text, int size, int color) {
+        TextView v = new TextView(this);
+        v.setText(text);
+        v.setTextSize(size);
+        v.setTextColor(color);
+        return v;
+    }
+
     private void buildScreen() {
+        getWindow().setStatusBarColor(0xFF07111F);
+        getWindow().setNavigationBarColor(0xFF07111F);
+        getWindow().getDecorView().setSystemUiVisibility(0);
+
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(22, 28, 22, 20);
-        root.setBackgroundColor(0xFF081321);
-        TextView title = new TextView(this);
-        title.setText("DATA DETECTIVE AI");
-        title.setTextColor(0xFFFFFFFF);
-        title.setTextSize(24);
-        title.setGravity(Gravity.CENTER);
-        root.addView(title);
-        TextView subtitle = new TextView(this);
-        subtitle.setText("اردو اور English وائس + AI چیٹ");
-        subtitle.setTextColor(0xFF9EDCF2);
-        subtitle.setTextSize(15);
-        subtitle.setGravity(Gravity.CENTER);
-        root.addView(subtitle);
+        root.setPadding(20, 18, 20, 16);
+        root.setBackground(new GradientDrawable(GradientDrawable.Orientation.TL_BR,
+                new int[]{0xFF101E35, 0xFF07111F, 0xFF090F1D}));
+        
+        LinearLayout top = new LinearLayout(this);
+        top.setGravity(Gravity.CENTER_VERTICAL);
+        top.setOrientation(LinearLayout.HORIZONTAL);
+        TextView mark = label("✦", 25, 0xFFFFFFFF);
+        mark.setGravity(Gravity.CENTER);
+        mark.setBackground(shape(0xFF6558E8, 0, 18));
+        top.addView(mark, new LinearLayout.LayoutParams(48, 48));
+        LinearLayout brand = new LinearLayout(this);
+        brand.setOrientation(LinearLayout.VERTICAL);
+        brand.setPadding(12, 0, 0, 0);
+        TextView title = label("DATA DETECTIVE", 19, 0xFFFFFFFF);
+        title.setTypeface(null, 1);
+        brand.addView(title);
+        TextView sub = label("YOUR SMART VOICE ASSISTANT", 9, 0xFF8FA8C8);
+        sub.setLetterSpacing(0.12f);
+        brand.addView(sub);
+        top.addView(brand, new LinearLayout.LayoutParams(0, -2, 1));
+        TextView live = label("● ONLINE", 10, 0xFF64E6C1);
+        live.setPadding(10, 7, 10, 7);
+        live.setBackground(shape(0x2238D6A7, 0x5546D9AD, 22));
+        top.addView(live);
+        root.addView(top);
 
-        TextView keyLabel = new TextView(this);
-        keyLabel.setText("Pollinations API Key (اپنی key درج کریں)");
-        keyLabel.setTextColor(0xFFB9C8D8);
-        keyLabel.setPadding(0, 14, 0, 4);
-        root.addView(keyLabel);
+        TextView heroTag = label("  AI • VOICE • DISCOVERY  ", 10, 0xFFB9B2FF);
+        heroTag.setPadding(0, 22, 0, 7);
+        root.addView(heroTag);
+        TextView hero = label("آپ کا اپنا AI اسسٹنٹ", 25, 0xFFFFFFFF);
+        hero.setTypeface(null, 1);
+        root.addView(hero);
+        TextView intro = label("پوچھیں، بولیں، یا فون سے کوئی کام کروائیں۔", 13, 0xFFA9BBD0);
+        intro.setPadding(0, 5, 0, 16);
+        root.addView(intro);
+
+        LinearLayout keyCard = new LinearLayout(this);
+        keyCard.setOrientation(LinearLayout.VERTICAL);
+        keyCard.setPadding(15, 12, 15, 13);
+        keyCard.setBackground(shape(0xFF14243B, 0xFF263B5B, 18));
+        TextView keyTitle = label("🔐  AI CONNECTION", 11, 0xFF9DB7D8);
+        keyTitle.setTypeface(null, 1);
+        keyCard.addView(keyTitle);
+        TextView keyHint = label("اپنی Pollinations Secret Key درج کریں", 12, 0xFFDBE6F5);
+        keyHint.setPadding(0, 5, 0, 8);
+        keyCard.addView(keyHint);
         keyInput = new EditText(this);
         keyInput.setSingleLine(true);
         keyInput.setTextColor(0xFFFFFFFF);
-        keyInput.setHintTextColor(0xFF8A9BAD);
-        keyInput.setHint("sk_…");
+        keyInput.setHintTextColor(0xFF7186A3);
+        keyInput.setHint("sk_••••••••••");
+        keyInput.setTextSize(13);
+        keyInput.setPadding(13, 3, 13, 3);
         keyInput.setInputType(129);
-        root.addView(keyInput, new LinearLayout.LayoutParams(-1, -2));
+        keyInput.setBackground(shape(0xFF0B1729, 0xFF344B6B, 12));
+        keyCard.addView(keyInput, new LinearLayout.LayoutParams(-1, 48));
+        root.addView(keyCard);
 
-        conversation = new TextView(this);
-        conversation.setTextColor(0xFFFFFFFF);
-        conversation.setTextSize(16);
-        conversation.setText("السلام علیکم! سوال لکھیں یا مائیک دبائیں۔\nفون کے کام مثلاً یوٹیوب، واٹس ایپ، سیٹنگز اور الارم بغیر AI key کے بھی چلتے ہیں۔\n");
-        conversation.setPadding(0, 18, 0, 18);
+        LinearLayout chatHeader = new LinearLayout(this);
+        chatHeader.setGravity(Gravity.CENTER_VERTICAL);
+        chatHeader.setPadding(2, 16, 2, 9);
+        TextView chatTitle = label("آپ کی گفتگو", 15, 0xFFFFFFFF);
+        chatTitle.setTypeface(null, 1);
+        chatHeader.addView(chatTitle, new LinearLayout.LayoutParams(0, -2, 1));
+        TextView chatHint = label("محفوظ چیٹ سیشن", 10, 0xFF829BB9);
+        chatHeader.addView(chatHint);
+        root.addView(chatHeader);
+
         ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.setBackground(shape(0xFF0D1A2C, 0xFF243752, 18));
+        conversation = new TextView(this);
+        conversation.setTextColor(0xFFE7EFFB);
+        conversation.setTextSize(14);
+        conversation.setLineSpacing(5, 1.08f);
+        conversation.setPadding(16, 16, 16, 16);
+        conversation.setText("السلام علیکم! میں Data Detective ہوں۔\n\nآپ مجھ سے اردو یا English میں سوال کر سکتے ہیں۔ مائیک دبائیں یا نیچے اپنا سوال لکھیں۔\n\nفون کمانڈز: YouTube، WhatsApp، Camera، Settings، Alarm اور Timer۔");
         scroll.addView(conversation);
         root.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
 
+        TextView prompt = label("اپنا سوال لکھیں", 11, 0xFF9DB2CC);
+        prompt.setPadding(3, 13, 0, 6);
+        root.addView(prompt);
+        LinearLayout composer = new LinearLayout(this);
+        composer.setGravity(Gravity.CENTER_VERTICAL);
+        composer.setOrientation(LinearLayout.HORIZONTAL);
+        composer.setPadding(8, 6, 6, 6);
+        composer.setBackground(shape(0xFF14243A, 0xFF314968, 18));
         questionInput = new EditText(this);
         questionInput.setTextColor(0xFFFFFFFF);
-        questionInput.setHintTextColor(0xFF8A9BAD);
-        questionInput.setHint("اپنا سوال یہاں لکھیں…");
+        questionInput.setHintTextColor(0xFF7D91AC);
+        questionInput.setHint("یہاں لکھیں…");
+        questionInput.setTextSize(14);
+        questionInput.setPadding(9, 3, 6, 3);
         questionInput.setMinLines(1);
         questionInput.setMaxLines(3);
-        root.addView(questionInput, new LinearLayout.LayoutParams(-1, -2));
+        questionInput.setBackgroundColor(Color.TRANSPARENT);
+        composer.addView(questionInput, new LinearLayout.LayoutParams(0, -2, 1));
 
+        micButton = new Button(this);
+        micButton.setText("🎙");
+        micButton.setTextSize(17);
+        micButton.setTextColor(0xFFFFFFFF);
+        micButton.setAllCaps(false);
+        micButton.setPadding(0, 0, 0, 0);
+        micButton.setMinWidth(0);
+        micButton.setBackground(shape(0xFF675BEA, 0, 15));
+        LinearLayout.LayoutParams micLp = new LinearLayout.LayoutParams(48, 48);
+        micLp.setMargins(5, 0, 5, 0);
+        composer.addView(micButton, micLp);
         sendButton = new Button(this);
-        sendButton.setText("AI سے جواب پوچھیں");
+        sendButton.setText("➤");
+        sendButton.setTextSize(20);
+        sendButton.setTextColor(0xFFFFFFFF);
+        sendButton.setAllCaps(false);
+        sendButton.setPadding(0, 0, 0, 0);
+        sendButton.setMinWidth(0);
+        sendButton.setBackground(shape(0xFF16BFA5, 0, 15));
+        composer.addView(sendButton, new LinearLayout.LayoutParams(48, 48));
+        root.addView(composer);
+
+        TextView footer = label("DATA DETECTIVE AI   •   MADE TO HELP YOU", 9, 0xFF647D9C);
+        footer.setGravity(Gravity.CENTER);
+        footer.setPadding(0, 10, 0, 0);
+        root.addView(footer);
+
         sendButton.setOnClickListener(v -> {
             String q = questionInput.getText().toString().trim();
             if (!q.isEmpty()) { questionInput.setText(""); askAI(q); }
         });
-        root.addView(sendButton, new LinearLayout.LayoutParams(-1, -2));
-
-        micButton = new Button(this);
-        micButton.setText("🎙 بولنے کے لیے دبائیں");
-        micButton.setTextSize(17);
         micButton.setOnClickListener(v -> listen());
-        root.addView(micButton, new LinearLayout.LayoutParams(-1, -2));
         setContentView(root);
     }
 
