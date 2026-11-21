@@ -396,8 +396,10 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];lastAssistantReply='
     if (!prompt) { setStatus(kind, "Please write a description first."); return; }
     const form = new FormData();
     form.append("prompt", prompt);
-    const fileInput = byId(isImage ? "imageReference" : "videoReference");
-    if (fileInput.files[0]) form.append("reference", fileInput.files[0]);
+    if (!isImage) {
+      const fileInput = byId("videoReference");
+      if (fileInput && fileInput.files[0]) form.append("reference", fileInput.files[0]);
+    }
     if (isImage) form.append("aspect_ratio", byId("imageRatio").value);
     button.disabled = true;
     setStatus(kind, "Sending your request to the selected AI service…");
