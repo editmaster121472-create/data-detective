@@ -235,3 +235,64 @@ body{background:radial-gradient(ellipse at 75% 0%,#102d62 0,transparent 38%),lin
 .creative-result img,.creative-result video{display:block;width:100%;max-width:760px;max-height:620px;object-fit:contain;background:#050b18;border:1px solid #34527f;border-radius:12px}
 .creative-result a{color:#77c8ff;font-size:12px;overflow-wrap:anywhere}
 @media(max-width:600px){.creative-panel{padding:14px}.creative-options{grid-template-columns:1fr}}
+
+
+/* Data Detective signature visual identity */
+:root{--accent:#087cff;--accent-2:#46d4ff;--electric:#12b8ff;--panel-glow:0 18px 55px rgba(0,91,255,.16)}
+body{background:radial-gradient(ellipse at 50% -15%,rgba(0,116,255,.24),transparent 48%),radial-gradient(ellipse at 100% 40%,rgba(98,45,220,.12),transparent 35%),#060c1b}
+.brand{gap:12px;padding-bottom:27px}
+.brand-mark{width:45px;height:45px;border-radius:15px;background:linear-gradient(145deg,#04bfff,#0759db 58%,#673cf0);color:#fff;box-shadow:0 0 0 1px #5bcfff66,0 0 28px #078dff77;position:relative}
+.brand-mark svg{width:34px;height:34px;filter:drop-shadow(0 2px 4px #001b55)}
+.brand-copy b{font-size:13px;letter-spacing:1.7px;color:#f4faff}
+.brand-copy small{color:#7fbce9;letter-spacing:.35px}
+.mobile-brand .brand-mark{width:34px;height:34px}
+.mobile-brand .brand-mark svg{width:27px;height:27px}
+.topbar{backdrop-filter:blur(18px);box-shadow:0 5px 28px #02081755}
+.intro{position:relative;overflow:hidden;padding:26px 18px 34px;border:1px solid #24518a;border-radius:22px;background:linear-gradient(115deg,rgba(5,38,87,.88),rgba(8,20,48,.88) 55%,rgba(44,25,94,.72));box-shadow:var(--panel-glow);margin-bottom:24px}
+.intro:before{content:"";position:absolute;width:260px;height:260px;border-radius:50%;right:-75px;top:-125px;background:radial-gradient(circle,#18baff35,transparent 68%);pointer-events:none}
+.intro .eyebrow{color:#83d7ff}
+.intro h1{position:relative;font-size:clamp(35px,5.2vw,58px);text-shadow:0 5px 35px #007bff30}
+.intro h1 span{background:linear-gradient(90deg,#20caff,#8b9bff 58%,#d3a2ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.intro p{position:relative;color:#b8d5f4;font-size:14px}
+.chat-panel,.panel,.overview-card,.founder-panel,.creative-panel{box-shadow:var(--panel-glow)}
+.chat-panel{border-radius:20px}
+.assistant-avatar,.welcome-symbol{background:linear-gradient(145deg,#078dff,#6545f5);box-shadow:0 0 24px #087cff55}
+.model-chip,.step-chip{color:#8ddcff;background:#102b50;border-color:#2766a5}
+.side-link{transition:background .2s ease,transform .2s ease}
+.side-link:hover{transform:translateX(2px)}
+.new-chat{background:linear-gradient(110deg,#0d4387,#172e61);border-color:#2674bd}
+.new-chat span{color:#5bd6ff}
+.studio-card,.creative-panel,.task-form,.task-list-panel,.results,.upload{border-radius:17px}
+.studio-card{transition:transform .2s ease,box-shadow .2s ease}
+.studio-card:hover{transform:translateY(-3px);box-shadow:0 18px 34px #02081788}
+.send-button,.analyze-button{background:linear-gradient(110deg,#087cff,#315eea 65%,#7652ef);box-shadow:0 7px 20px #087cff35}
+.send-button:hover,.analyze-button:hover{filter:brightness(1.12);box-shadow:0 9px 25px #087cff55}
+input:focus,textarea:focus,.creative-panel select:focus{border-color:#26bfff!important;box-shadow:0 0 0 3px #0aaaff18}
+footer{border-top:1px solid #1e3c66;margin-top:35px;padding-top:22px}
+.login-wrap{position:relative;overflow:hidden;min-height:100vh;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.9fr);align-items:center;gap:clamp(25px,6vw,90px);padding:clamp(22px,6vw,80px);background:radial-gradient(ellipse at 15% 20%,#0758b955,transparent 42%),radial-gradient(ellipse at 85% 80%,#6739d633,transparent 42%),#050b19;color:#f4faff}
+.login-wrap:before{content:"";position:absolute;inset:0;background-image:linear-gradient(#2b6eb00b 1px,transparent 1px),linear-gradient(90deg,#2b6eb00b 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(90deg,#000,transparent 85%);pointer-events:none}
+.login-hero{position:relative;z-index:1;max-width:650px}
+.login-brand{display:flex;align-items:center;gap:14px;margin-bottom:34px}
+.login-brand .brand-mark{width:62px;height:62px;border-radius:20px}
+.login-brand .brand-mark svg{width:47px;height:47px}
+.login-brand b{display:block;font-size:clamp(18px,2.5vw,26px);letter-spacing:2px}
+.login-brand small{display:block;color:#8dcaff;margin-top:5px;font-size:12px}
+.login-hero h1{font-size:clamp(38px,6vw,68px);line-height:1.04;letter-spacing:-2.2px;margin:0 0 18px}
+.login-hero h1 span{display:block;background:linear-gradient(90deg,#19caff,#8a9dff,#d2a0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.login-hero>p{max-width:490px;color:#b5c9e7;font-size:15px;line-height:1.8}
+.login-features{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:28px;max-width:520px}
+.login-feature{padding:13px;border:1px solid #244875;border-radius:13px;background:#0c1d39bb;color:#dcecff;font-size:12px}
+.login-feature strong{display:block;color:#53d4ff;font-size:17px;margin-bottom:4px}
+.login-card{position:relative;z-index:1;width:min(100%,440px);justify-self:center;padding:clamp(23px,4vw,36px);border:1px solid #287ac0;border-radius:22px;background:linear-gradient(150deg,#102344f5,#0a142cf5);box-shadow:0 24px 85px #00102eaa,0 0 35px #087cff20}
+.login-card .brand-mark{margin:0 auto 18px;width:58px;height:58px}
+.login-card .brand-mark svg{width:43px;height:43px}
+.login-card h1{text-align:center;font-size:25px;letter-spacing:-.5px;margin:0 0 7px}
+.login-card>p{text-align:center;color:#a9c4e5;font-size:12px;line-height:1.65}
+.login-card label{display:block;margin:18px 0 8px;font-size:11px;font-weight:700;color:#dcecff}
+.login-card input{width:100%;padding:14px 15px;border:1px solid #31547f;border-radius:11px;background:#09172e;color:#fff;font-size:13px;outline:none}
+.login-card input:focus{border-color:#21bfff;box-shadow:0 0 0 3px #0aaaff1c}
+.login-card button{width:100%;margin-top:23px;padding:14px;border:0;border-radius:11px;background:linear-gradient(100deg,#087cff,#315eea 65%,#7652ef);color:#fff;font-size:13px;font-weight:800;box-shadow:0 8px 24px #087cff44;cursor:pointer}
+.login-card button:hover{filter:brightness(1.12)}
+.login-error{padding:11px 13px;border:1px solid #a34c60;border-radius:10px;background:#3b1b2a;color:#ffd2dc!important;text-align:left!important}
+.login-note{font-size:10px!important;color:#7895ba!important;margin-top:20px}
+@media(max-width:760px){.login-wrap{grid-template-columns:1fr;gap:24px;padding:24px 16px}.login-hero{text-align:center;margin:auto}.login-brand{justify-content:center;margin-bottom:20px}.login-hero>p{margin:0 auto;font-size:13px}.login-features{margin:20px auto 0;gap:8px}.login-feature{font-size:10px;padding:10px}.login-card{width:min(100%,430px)}}
