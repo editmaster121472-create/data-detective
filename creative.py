@@ -43,6 +43,8 @@ def _pollinations_image(prompt):
         raise RuntimeError("Pollinations image service HTTP " + str(exc.code) + ": " + detail[:400])
     if len(image_bytes) > 12 * 1024 * 1024:
         raise RuntimeError("Generated image is larger than the 12 MB limit.")
+    if not image_bytes:
+        raise RuntimeError("Pollinations returned an empty image response.")
     if not content_type.startswith("image/"):
         raise RuntimeError("Pollinations did not return an image.")
     return "data:" + content_type + ";base64," + base64.b64encode(image_bytes).decode("ascii")
