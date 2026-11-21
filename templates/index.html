@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#101014">
-<title>Data Detective AI</title>
+<title>Data Detective — AI Personal Assistant</title>
+<meta name="description" content="Data Detective — your AI assistant for chat, research, data analysis and creative work.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -14,7 +15,7 @@
 <body>
 <div class="app-shell">
 <aside class="sidebar" id="appSidebar" aria-label="Main navigation">
-  <a class="brand" href="/" aria-label="Data Detective home"><span class="brand-mark">⌕</span><span class="brand-copy"><b>DATA DETECTIVE</b><small>AI workspace</small></span></a>
+  <a class="brand" href="/" aria-label="Data Detective home"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="20" cy="20" r="12" fill="none" stroke="currentColor" stroke-width="4"/><path d="M29 29L41 41M12 25l-5 8M14 9l-5-4M26 8l5-4" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M14 20l4-4 4 3 5-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="brand-copy"><b>DATA DETECTIVE</b><small>AI workspace</small></span></a>
   <button id="clearChat" class="new-chat" type="button"><span>＋</span> New chat</button>
   <div class="side-label">YOUR WORKSPACE</div>
   <a class="side-link active" href="#chat-section"><span>✳</span> AI Assistant</a>
@@ -33,7 +34,7 @@
 <div class="main-area">
 <header class="topbar">
   <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open navigation menu" aria-controls="appSidebar" aria-expanded="false"><span></span><span></span><span></span></button>
-  <div class="mobile-brand"><span class="brand-mark">⌕</span><b>DATA DETECTIVE</b></div>
+  <div class="mobile-brand"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="20" cy="20" r="12" fill="none" stroke="currentColor" stroke-width="4"/><path d="M29 29L41 41M12 25l-5 8M14 9l-5-4M26 8l5-4" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M14 20l4-4 4 3 5-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span><b>DATA DETECTIVE</b></div>
   <label class="top-search"><span>⌕</span><input id="workspaceSearch" type="search" placeholder="Search tools, chats and workspace…" aria-label="Search workspace"></label>
   <div class="topbar-actions"><div class="profile-chip"><span class="profile-avatar">DD</span><span><b>Personal Workspace</b><small>Owner profile</small></span></div>
   <a class="sample-link" href="/api/sample"><span>↓</span> Sample CSV</a></div>
