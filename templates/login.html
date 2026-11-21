@@ -3,41 +3,47 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#101014">
-<title>Owner sign in · Data Detective AI</title>
+<meta name="theme-color" content="#071329">
+<title>Owner Sign In · Data Detective</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/style.css">
-<style>
-.login-wrap{min-height:100vh;display:grid;place-items:center;padding:24px;background:#101014;color:#f4f4f5}
-.login-card{width:min(100%,420px);padding:28px;border:1px solid #393544;border-radius:18px;background:#1b1a22}
-.login-card h1{font-size:25px;margin:0 0 8px}.login-card p{color:#a1a1aa;font-size:13px;line-height:1.6}
-.login-card label{display:block;margin:18px 0 7px;font-size:12px;color:#d4d4d8}
-.login-card input{width:100%;padding:13px;border:1px solid #45434f;border-radius:9px;background:#121218;color:#fff}
-.login-card button{width:100%;margin-top:20px;padding:13px;border:0;border-radius:9px;background:#a78bfa;color:#191323;font-weight:800}
-.login-error{padding:10px;border-radius:8px;background:#3b2028;color:#fecdd3}
-.login-note{font-size:11px!important}
-</style>
 </head>
 <body>
 <main class="login-wrap">
-<section class="login-card">
-<div class="brand-mark">⌕</div>
-<h1>Owner sign in</h1>
-<p>Private access to your Data Detective personal assistant.</p>
-{% if setup_required %}
-<p class="login-error">Owner sign-in is not configured yet. Set OWNER_USERNAME, OWNER_PASSWORD_HASH and SECRET_KEY in the server’s private .env file before enabling private mode.</p>
-{% else %}
-{% if error %}<p class="login-error" role="alert">{{ error }}</p>{% endif %}
-<form method="post" action="/login">
-<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-<label for="username">Owner username</label>
-<input id="username" name="username" autocomplete="username" required maxlength="120">
-<label for="password">Password</label>
-<input id="password" name="password" type="password" autocomplete="current-password" required maxlength="1024">
-<button type="submit">Sign in securely</button>
-</form>
-{% endif %}
-<p class="login-note">Never share your password or API keys. Sign-in is only enabled after server-side setup.</p>
-</section>
+  <section class="login-hero">
+    <div class="login-brand">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="20" cy="20" r="12" fill="none" stroke="currentColor" stroke-width="4"/><path d="M29 29L41 41M12 25l-5 8M14 9l-5-4M26 8l5-4" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M14 20l4-4 4 3 5-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span><b>DATA DETECTIVE</b><small>AI-POWERED PERSONAL ASSISTANT</small></span>
+    </div>
+    <h1>Your ideas.<span>Under investigation.</span></h1>
+    <p>Your private AI workspace for asking questions, exploring knowledge, analyzing data and organizing creative work.</p>
+    <div class="login-features">
+      <div class="login-feature"><strong>✦ AI CHAT</strong>Ask questions and explore ideas</div>
+      <div class="login-feature"><strong>▦ DATA ANALYSIS</strong>Understand CSV files and charts</div>
+      <div class="login-feature"><strong>◈ AI STUDIO</strong>Creative and productivity tools</div>
+      <div class="login-feature"><strong>♛ FOUNDER ACCESS</strong>Private owner workspace</div>
+    </div>
+  </section>
+  <section class="login-card">
+    <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48"><circle cx="20" cy="20" r="12" fill="none" stroke="currentColor" stroke-width="4"/><path d="M29 29L41 41M12 25l-5 8M14 9l-5-4M26 8l5-4" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M14 20l4-4 4 3 5-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <h1>Owner Sign In</h1>
+    <p>Secure access to your Data Detective personal assistant.</p>
+    {% if setup_required %}
+      <p class="login-error" role="alert">Owner sign-in is not configured yet. Set OWNER_USERNAME, OWNER_PASSWORD_HASH and SECRET_KEY in the private server .env file.</p>
+    {% else %}
+      {% if error %}<p class="login-error" role="alert">{{ error }}</p>{% endif %}
+      <form method="post" action="/login">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <label for="username">Owner username</label>
+        <input id="username" name="username" autocomplete="username" required maxlength="120" placeholder="Enter your username">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required maxlength="1024" placeholder="Enter your password">
+        <button type="submit">→ &nbsp; Sign In Securely</button>
+      </form>
+    {% endif %}
+    <p class="login-note">🔒 Your credentials are checked securely on the server. Never share your password or API keys.</p>
+  </section>
 </main>
 </body>
 </html>
