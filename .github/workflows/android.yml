@@ -34,3 +34,5 @@ jobs:
           if-no-files-found: error
 
 # Rebuild after AI chat history update
+
+# Rebuild after modern UI refresh
