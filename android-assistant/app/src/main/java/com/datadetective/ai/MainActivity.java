@@ -43,6 +43,7 @@ public class MainActivity extends Activity {
     private EditText questionInput, keyInput;
     private boolean ttsReady = false;
     private final ExecutorService network = Executors.newSingleThreadExecutor();
+    private final JSONArray chatHistory = new JSONArray();
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -185,17 +186,19 @@ public class MainActivity extends Activity {
         } else if (containsAny(q, "hello", "سلام", "السلام", "ہیلو")) {
             say("وعلیکم السلام! میں آپ کی بات سن رہا ہوں۔");
         } else {
-            askAI(raw);
+            askAI(raw, true);
         }
     }
 
-    private void askAI(String question) {
+    private void askAI(String question) { askAI(question, false); }
+
+    private void askAI(String question, boolean alreadyShown) {
         String key = keyInput.getText().toString().trim();
         if (key.isEmpty()) {
             say("AI سوال جواب کے لیے Pollinations کی اپنی API key درج کریں۔ API key کے بغیر فون کے بنیادی وائس کمانڈ کام کرتے ہیں۔");
             return;
         }
-        addMessage("آپ", question);
+        if (!alreadyShown) addMessage("آپ", question);
         setBusy(true);
         network.execute(() -> {
             HttpURLConnection conn = null;
@@ -210,16 +213,17 @@ public class MainActivity extends Activity {
                 conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
                 JSONObject body = new JSONObject();
                 body.put("model", "openai/gpt-oss-20b");
-                JSONArray messages = new JSONArray();
-                JSONObject system = new JSONObject();
-                system.put("role", "system");
-                system.put("content", "You are Data Detective AI, a helpful assistant. Reply in the same language as the user, especially Urdu or Roman Urdu. Be accurate, clear, and concise. You cannot claim to control the phone; phone actions are handled by the Android app.");
-                messages.put(system);
+                if (chatHistory.length() == 0) {
+                    JSONObject system = new JSONObject();
+                    system.put("role", "system");
+                    system.put("content", "You are Data Detective AI, a helpful assistant. Reply in the same language as the user, especially Urdu or Roman Urdu. Be accurate, clear, and concise. You cannot claim to control the phone; phone actions are handled by the Android app.");
+                    chatHistory.put(system);
+                }
                 JSONObject user = new JSONObject();
                 user.put("role", "user");
                 user.put("content", question);
-                messages.put(user);
-                body.put("messages", messages);
+                chatHistory.put(user);
+                body.put("messages", chatHistory);
                 body.put("temperature", 0.6);
                 byte[] payload = body.toString().getBytes(StandardCharsets.UTF_8);
                 try (OutputStream os = conn.getOutputStream()) { os.write(payload); }
@@ -233,6 +237,10 @@ public class MainActivity extends Activity {
                 if (code >= 200 && code < 300) {
                     JSONObject json = new JSONObject(response.toString());
                     String answer = json.getJSONArray("choices").getJSONObject(0).getJSONObject("message").getString("content").trim();
+                    JSONObject assistant = new JSONObject();
+                    assistant.put("role", "assistant");
+                    assistant.put("content", answer);
+                    chatHistory.put(assistant);
                     runOnUiThread(() -> { setBusy(false); say(answer); });
                 } else {
                     String error = "AI سروس نے جواب نہیں دیا۔ HTTP " + code + "۔ اپنی API key اور اس کے balance/limits چیک کریں۔";
