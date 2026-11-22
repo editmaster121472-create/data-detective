@@ -254,44 +254,63 @@ public class MainActivity extends Activity {
     }
 
     private void handleCommand(String raw) {
-        String q = raw.toLowerCase(Locale.ROOT);
+        String q = raw.toLowerCase(Locale.ROOT).trim();
         addMessage("آپ", raw);
-        if (containsAny(q, "یوٹیوب", "youtube")) {
-            String term = q.replace("youtube", "").replace("یوٹیوب", "").replace("کھولو", "").replace("اوپن", "").trim();
-            if (term.isEmpty()) term = "YouTube";
-            openUrl("https://www.youtube.com/results?search_query=" + Uri.encode(term), "YouTube سرچ کھول رہا ہوں۔");
-        } else if (containsAny(q, "سیٹنگ", "settings")) {
-            launch(new Intent(android.provider.Settings.ACTION_SETTINGS), "سیٹنگز کھول رہا ہوں۔");
-        } else if (containsAny(q, "about phone", "فون کے بارے", "موبائل کی معلومات")) {
-            launch(new Intent(android.provider.Settings.ACTION_DEVICE_INFO_SETTINGS), "فون کی معلومات کھول رہا ہوں۔");
-        } else if (containsAny(q, "chrome", "کروم", "browser", "براؤزر")) {
-            openUrl("https://www.google.com", "براؤزر کھول رہا ہوں۔");
-        } else if (containsAny(q, "whatsapp", "واٹس ایپ")) {
-            openPackage("com.whatsapp", "WhatsApp کھول رہا ہوں۔");
-        } else if (containsAny(q, "camera", "کیمرہ")) {
-            launch(new Intent("android.media.action.IMAGE_CAPTURE"), "کیمرہ کھول رہا ہوں۔");
-        } else if (containsAny(q, "alarm", "الارم")) {
-            Intent a = new Intent(AlarmClock.ACTION_SET_ALARM);
-            a.putExtra(AlarmClock.EXTRA_MESSAGE, "Data Detective");
-            launch(a, "الارم سیٹ کرنے کی اسکرین کھول رہا ہوں۔");
-        } else if (containsAny(q, "timer", "ٹائمر")) {
-            launch(new Intent(AlarmClock.ACTION_SET_TIMER), "ٹائمر کھول رہا ہوں۔");
-        } else if (containsAny(q, "وقت", "time")) {
-            java.text.SimpleDateFormat f = new java.text.SimpleDateFormat("hh:mm a", new Locale("ur", "PK"));
-            say("اب وقت ہے " + f.format(new java.util.Date()));
-        } else if (containsAny(q, "hello", "سلام", "السلام", "ہیلو")) {
-            say("وعلیکم السلام! میں آپ کی بات سن رہا ہوں۔");
-        } else {
-            askAI(raw, true);
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("-?\\d+(?:\\.\\d+)?").matcher(q);
+        java.util.ArrayList<Double> n = new java.util.ArrayList<>();
+        while (m.find() && n.size() < 2) n.add(Double.parseDouble(m.group()));
+        if (n.size() == 2 && containsAny(q, "kitne", "how much", "how many", "ہوتے", "کتنے", "جمع", "plus", "add", "minus", "منفی", "multiply", "ضرب", "times", "divide", "تقسیم", "aur", "اور", "+", "-", "*", "/")) {
+            double x=n.get(0), y=n.get(1), z;
+            if (containsAny(q,"minus","منفی","subtract","-")) z=x-y;
+            else if (containsAny(q,"multiply","ضرب","times","*")) z=x*y;
+            else if (containsAny(q,"divide","تقسیم","/")) { if(y==0){say("صفر سے تقسیم نہیں ہو سکتی۔");return;} z=x/y; }
+            else z=x+y;
+            say("جواب ہے " + (z==Math.rint(z) ? String.valueOf((long)z) : String.valueOf(z))); return;
         }
+        if (containsAny(q,"instagram","انسٹاگرام")) openPackage("com.instagram.android","Instagram کھول رہا ہوں۔");
+        else if (containsAny(q,"gallery","گیلری","photos","تصاویر")) {
+            Intent g=new Intent(Intent.ACTION_GET_CONTENT); g.setType("image/*"); g.addCategory(Intent.CATEGORY_OPENABLE); launch(g,"گیلری کھول رہا ہوں۔");
+        } else if (containsAny(q,"google","گوگل")) {
+            if (!openPackageIfInstalled("com.google.android.googlequicksearchbox")) openUrl("https://www.google.com","Google کھول رہا ہوں۔");
+        } else if (containsAny(q,"youtube","یوٹیوب")) {
+            if (containsAny(q,"search","سرچ","تلاش")) openUrl("https://www.youtube.com/results?search_query="+Uri.encode(raw),"YouTube پر تلاش کر رہا ہوں۔");
+            else if (!openPackageIfInstalled("com.google.android.youtube")) openUrl("https://www.youtube.com","YouTube کھول رہا ہوں۔");
+        } else if (containsAny(q,"chrome","کروم","browser","براؤزر")) {
+            if (!openPackageIfInstalled("com.android.chrome")) openUrl("https://www.google.com","براؤزر کھول رہا ہوں۔");
+        } else if (containsAny(q,"whatsapp","واٹس ایپ")) openPackage("com.whatsapp","WhatsApp کھول رہا ہوں۔");
+        else if (containsAny(q,"camera","کیمرہ")) launch(new Intent("android.media.action.IMAGE_CAPTURE"),"کیمرہ کھول رہا ہوں۔");
+        else if (containsAny(q,"سیٹنگ","settings")) launch(new Intent(android.provider.Settings.ACTION_SETTINGS),"سیٹنگز کھول رہا ہوں۔");
+        else if (containsAny(q,"about phone","فون کے بارے","موبائل کی معلومات")) launch(new Intent(android.provider.Settings.ACTION_DEVICE_INFO_SETTINGS),"فون کی معلومات کھول رہا ہوں۔");
+        else if (containsAny(q,"alarm","الارم")) { Intent al=new Intent(AlarmClock.ACTION_SET_ALARM); al.putExtra(AlarmClock.EXTRA_MESSAGE,"Data Detective"); launch(al,"الارم کھول رہا ہوں۔"); }
+        else if (containsAny(q,"timer","ٹائمر")) launch(new Intent(AlarmClock.ACTION_SET_TIMER),"ٹائمر کھول رہا ہوں۔");
+        else if (containsAny(q,"وقت","time")) { java.text.SimpleDateFormat df=new java.text.SimpleDateFormat("hh:mm a",new Locale("ur","PK")); say("اب وقت ہے "+df.format(new java.util.Date())); }
+        else if (containsAny(q,"hello","سلام","السلام","ہیلو")) say("وعلیکم السلام! میں آپ کی بات سن رہا ہوں۔");
+        else askAI(raw,true);
     }
+    private boolean openPackageIfInstalled(String pkg) { Intent i=getPackageManager().getLaunchIntentForPackage(pkg); if(i==null)return false; launch(i,"ایپ کھول رہا ہوں۔"); return true; }
 
     private void askAI(String question) { askAI(question, false); }
+
+    private boolean answerMathFromText(String question) {
+        String q=question.toLowerCase(Locale.ROOT);
+        java.util.regex.Matcher m=java.util.regex.Pattern.compile("-?\\d+(?:\\.\\d+)?").matcher(q);
+        java.util.ArrayList<Double> n=new java.util.ArrayList<>();
+        while(m.find() && n.size()<2) n.add(Double.parseDouble(m.group()));
+        if(n.size()!=2 || !containsAny(q,"kitne","how much","how many","ہوتے","کتنے","جمع","plus","add","minus","منفی","multiply","ضرب","times","divide","تقسیم","aur","اور","+","-","*","/")) return false;
+        double x=n.get(0),y=n.get(1),z;
+        if(containsAny(q,"minus","منفی","subtract","-")) z=x-y;
+        else if(containsAny(q,"multiply","ضرب","times","*")) z=x*y;
+        else if(containsAny(q,"divide","تقسیم","/")) { if(y==0){say("صفر سے تقسیم نہیں ہو سکتی۔");return true;} z=x/y; }
+        else z=x+y;
+        say("جواب ہے "+(z==Math.rint(z)?String.valueOf((long)z):String.valueOf(z))); return true;
+    }
 
     private void askAI(String question, boolean alreadyShown) {
         String key = keyInput.getText().toString().trim();
         if (key.isEmpty()) {
-            say("AI سوال جواب کے لیے Pollinations کی اپنی API key درج کریں۔ API key کے بغیر فون کے بنیادی وائس کمانڈ کام کرتے ہیں۔");
+            if (!alreadyShown) addMessage("آپ", question);
+            if (answerMathFromText(question)) return;
+            say("عام سوالات کے جواب کے لیے Pollinations کی اپنی Secret API Key درج کریں۔ حساب اور فون کمانڈز بغیر API Key بھی کام کرتے ہیں۔");
             return;
         }
         if (!alreadyShown) addMessage("آپ", question);
