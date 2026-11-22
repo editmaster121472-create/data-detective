@@ -329,10 +329,10 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];lastAssistantReply='
 })();
 
 
-/* Replicate Image & Video Studio */
+/* fal.ai Image & Video Studio */
 (function () {
   const byId = (id) => document.getElementById(id);
-  const historyKey = "dd-creative-history-v1";
+  const historyKey = "dd-creative-history-v2";
   function setStatus(kind, message) {
     const node = byId(kind + "Status");
     if (node) node.textContent = message;
@@ -348,18 +348,11 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];lastAssistantReply='
     const box = byId(kind + "Result");
     box.replaceChildren();
     const urls = Array.isArray(output) ? output : [output];
-    urls.filter(x => typeof x === "string" && (/^https:\/\//i.test(x) || /^data:image\//i.test(x))).forEach(url => {
-      let media;
-      if (kind === "video") {
-        media = document.createElement("video");
-        media.controls = true;
-        media.playsInline = true;
-        media.src = url;
-      } else {
-        media = document.createElement("img");
-        media.alt = "Generated image";
-        media.src = url;
-      }
+    urls.filter(x => typeof x === "string" && /^https:\/\//i.test(x)).forEach(url => {
+      const media = document.createElement(kind === "video" ? "video" : "img");
+      if (kind === "video") { media.controls = true; media.playsInline = true; }
+      else media.alt = "Generated image";
+      media.src = url;
       box.appendChild(media);
       const link = document.createElement("a");
       link.href = url; link.target = "_blank"; link.rel = "noopener";
@@ -368,26 +361,24 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];lastAssistantReply='
       remember(kind, url);
     });
   }
-  async function waitForPrediction(kind, prediction) {
+  async function waitForVideo(prediction) {
     let current = prediction;
     const id = current.id;
-    for (let i = 0; i < 75; i++) {
+    for (let i = 0; i < 90; i++) {
       if (current.status === "succeeded") {
-        showOutput(kind, current.output);
-        setStatus(kind, "Completed. Your " + kind + " is ready.");
+        showOutput("video", current.output);
+        setStatus("video", "Completed. Your video is ready.");
         return;
       }
-      if (["failed", "canceled"].includes(current.status)) {
-        throw new Error(current.error || ("Generation " + current.status + "."));
-      }
-      setStatus(kind, "Generating… " + (current.status || "starting") + " (" + (i + 1) + "/75)");
-      await new Promise(resolve => setTimeout(resolve, 4000));
+      if (current.status === "failed") throw new Error(current.error || "Video generation failed.");
+      setStatus("video", "Generating video… " + (i + 1) + "/90");
+      await new Promise(resolve => setTimeout(resolve, 5000));
       const response = await fetch("/api/creative/status/" + encodeURIComponent(id));
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Could not check generation status.");
+      if (!response.ok) throw new Error(data.error || "Could not check video status.");
       current = data.prediction;
     }
-    setStatus(kind, "Still processing. You can check again later; this request may continue on Replicate.");
+    setStatus("video", "Still processing on fal.ai. Refresh later and check the request again.");
   }
   async function generate(kind) {
     const isImage = kind === "image";
@@ -396,23 +387,26 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];lastAssistantReply='
     if (!prompt) { setStatus(kind, "Please write a description first."); return; }
     const form = new FormData();
     form.append("prompt", prompt);
-    if (!isImage) {
-      const fileInput = byId("videoReference");
-      if (fileInput && fileInput.files[0]) form.append("reference", fileInput.files[0]);
+    if (isImage) {
+      form.append("aspect_ratio", byId("imageRatio").value);
+    } else {
+      form.append("duration", byId("videoDuration")?.value || "5");
+      form.append("aspect_ratio", byId("videoRatio")?.value || "16:9");
     }
-    if (isImage) form.append("aspect_ratio", byId("imageRatio").value);
     button.disabled = true;
-    setStatus(kind, "Sending your request to the selected AI service…");
+    setStatus(kind, "Sending your request to fal.ai…");
     byId(kind + "Result").replaceChildren();
     try {
       const response = await fetch("/api/creative/" + kind, {method: "POST", body: form});
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Generation request failed.");
-      if (kind === "image" && data.image_data) {
-        showOutput("image", data.image_data);
-        setStatus("image", "Image created with Pollinations AI.");
+      if (kind === "image" && Array.isArray(data.images)) {
+        showOutput("image", data.images);
+        setStatus("image", "Image created with fal.ai.");
+      } else if (kind === "video" && data.prediction) {
+        await waitForVideo(data.prediction);
       } else {
-        await waitForPrediction(kind, data.prediction);
+        throw new Error("fal.ai returned an unexpected response.");
       }
     } catch (error) {
       setStatus(kind, error.message || "Something went wrong. Please try again.");
@@ -423,10 +417,10 @@ $('clearChat').addEventListener('click',()=>{chatHistory=[];lastAssistantReply='
   byId("generateImage")?.addEventListener("click", () => generate("image"));
   byId("generateVideo")?.addEventListener("click", () => generate("video"));
   fetch("/api/creative/config").then(r => r.json()).then(config => {
-    setStatus("image", config.image_provider === "pollinations" ? "Pollinations image service connected. Check your account balance before generating." : "Add your Pollinations API key to enable image generation.");
-    setStatus("video", config.video_configured ? "Replicate video service connected. Video generation may cost credits." : "Video service not configured; Replicate token needed.");
+    setStatus("image", config.image_configured ? "fal.ai image generation is connected." : "Add FAL_KEY to PythonAnywhere to enable image generation.");
+    setStatus("video", config.video_configured ? "fal.ai video generation is connected. Video jobs may take longer." : "Add FAL_KEY to PythonAnywhere to enable video generation.");
   }).catch(() => {
-    setStatus("image", "Could not check image service connection.");
-    setStatus("video", "Could not check video service connection.");
+    setStatus("image", "Could not check fal.ai connection.");
+    setStatus("video", "Could not check fal.ai connection.");
   });
 })();
