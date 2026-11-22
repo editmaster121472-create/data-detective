@@ -248,40 +248,8 @@ def remove_task(task_id):
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    if not auth_is_configured():
-        return render_template(
-            "login.html", setup_required=True, error=None, csrf_token=""
-        ), 503
-
-    if request.method == "GET":
-        token = secrets.token_urlsafe(32)
-        session["login_csrf"] = token
-        return render_template(
-            "login.html", setup_required=False, error=None, csrf_token=token
-        )
-
-    submitted_token = str(request.form.get("csrf_token", ""))
-    expected_token = str(session.pop("login_csrf", ""))
-    if not expected_token or not secrets.compare_digest(expected_token, submitted_token):
-        return render_template(
-            "login.html", setup_required=False,
-            error="Your sign-in page expired. Refresh and try again.",
-            csrf_token=""
-        ), 400
-
-    username = request.form.get("username", "")
-    password = request.form.get("password", "")
-    if verify_owner_credentials(username, password):
-        session.clear()
-        session["owner_username"] = os.getenv("OWNER_USERNAME", "").strip()
-        return redirect(url_for("home"))
-
-    token = secrets.token_urlsafe(32)
-    session["login_csrf"] = token
-    return render_template(
-        "login.html", setup_required=False,
-        error="Username or password is incorrect.", csrf_token=token
-    ), 401
+    # Owner sign-in has been removed; send visitors to the public dashboard.
+    return redirect(url_for("home"))
 
 @app.get("/api/sample")
 def sample():
