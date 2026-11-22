@@ -103,7 +103,7 @@
   <div class="creative-panel">
     <label class="field-label" for="videoPrompt">Video description</label>
     <textarea id="videoPrompt" rows="3" maxlength="1200" placeholder="A slow cinematic camera move through a futuristic city at sunset..."></textarea>
-    <label class="field-label" for="videoReference">First frame image (optional)</label><input id="videoReference" type="file" accept="image/png,image/jpeg,image/webp">
+    <div class="creative-options"><div><label class="field-label" for="videoDuration">Video length</label><select id="videoDuration"><option value="5">5 seconds</option><option value="8">8 seconds</option><option value="10">10 seconds</option><option value="15">15 seconds</option></select></div><div><label class="field-label" for="videoRatio">Aspect ratio</label><select id="videoRatio"><option value="16:9">Landscape 16:9</option><option value="9:16">Portrait 9:16</option><option value="1:1">Square 1:1</option><option value="4:3">Classic 4:3</option><option value="3:4">Portrait 3:4</option></select></div></div>
     <button class="analyze-button" id="generateVideo" type="button">Generate video <span>▶</span></button>
     <p class="creative-status" id="videoStatus" aria-live="polite">Checking video service…</p><div class="creative-result" id="videoResult"></div>
   </div>
