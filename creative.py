@@ -1,166 +1,167 @@
-"""Replicate-backed image and video generation endpoints.
-
-The Replicate token is read only on the server and is never sent to the browser.
-"""
-import base64
+"""fal.ai image and video generation routes for the Data Detective web studio."""
 import json
 import os
-import re
 import urllib.error
-import urllib.request
 import urllib.parse
+import urllib.request
 import uuid
 
 from flask import Blueprint, jsonify, request, session
 
 creative_bp = Blueprint("creative", __name__)
-_predictions = {}
+_jobs = {}
+
+IMAGE_MODEL = os.getenv("FAL_IMAGE_MODEL", "google/nano-banana-2.1").strip()
+VIDEO_MODEL = os.getenv("FAL_VIDEO_MODEL", "minimax/h3-max/text-to-video").strip()
 
 
-def _token():
-    return os.getenv("REPLICATE_API_TOKEN", "").strip()
+def _fal_key():
+    return os.getenv("FAL_KEY", "").strip()
 
 
-def _pollinations_key():
-    return os.getenv("POLLINATIONS_API_KEY", "").strip()
-
-
-def _pollinations_image(prompt):
-    api_key = _pollinations_key()
-    if not api_key:
-        raise RuntimeError("Pollinations API key is not configured. Add POLLINATIONS_API_KEY to the private .env file.")
-    url = "https://gen.pollinations.ai/image/" + urllib.parse.quote(prompt, safe="") + "?model=flux"
-    req = urllib.request.Request(url, headers={
-        "Authorization": "Bearer " + api_key,
-        "Accept": "image/*",
-    }, method="GET")
-    try:
-        with urllib.request.urlopen(req, timeout=120) as response:
-            image_bytes = response.read(12 * 1024 * 1024 + 1)
-            content_type = response.headers.get("Content-Type", "image/jpeg").split(";")[0]
-    except urllib.error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError("Pollinations image service HTTP " + str(exc.code) + ": " + detail[:400])
-    if len(image_bytes) > 12 * 1024 * 1024:
-        raise RuntimeError("Generated image is larger than the 12 MB limit.")
-    if not image_bytes:
-        raise RuntimeError("Pollinations returned an empty image response.")
-    if not content_type.startswith("image/"):
-        raise RuntimeError("Pollinations did not return an image.")
-    return "data:" + content_type + ";base64," + base64.b64encode(image_bytes).decode("ascii")
-
-def _model(env_name, default):
-    value = os.getenv(env_name, default).strip()
-    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", value):
-        raise ValueError("Invalid model setting: " + env_name)
-    return value
-
-
-def _replicate(method, url, payload=None, wait=5):
+def _fal_call(url, method="GET", payload=None, timeout=120):
+    key = _fal_key()
+    if not key:
+        raise RuntimeError("fal.ai is not configured. Add FAL_KEY to the private PythonAnywhere .env file.")
     body = None if payload is None else json.dumps(payload).encode("utf-8")
-    headers = {"Authorization": "Bearer " + _token(), "Content-Type": "application/json"}
-    if method == "POST":
-        headers["Prefer"] = "wait=" + str(wait)
+    headers = {"Authorization": "Key " + key, "Accept": "application/json"}
+    if body is not None:
+        headers["Content-Type"] = "application/json"
     req = urllib.request.Request(url, data=body, headers=headers, method=method)
     try:
-        with urllib.request.urlopen(req, timeout=90) as response:
-            return json.loads(response.read().decode("utf-8"))
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            raw = response.read()
+        return json.loads(raw.decode("utf-8")) if raw else {}
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
         try:
-            message = json.loads(detail).get("detail") or json.loads(detail).get("title") or detail
+            parsed = json.loads(detail)
+            message = parsed.get("detail") or parsed.get("message") or parsed.get("error") or detail
         except Exception:
             message = detail
-        raise RuntimeError("Replicate HTTP " + str(exc.code) + ": " + str(message)[:500])
+        raise RuntimeError("fal.ai HTTP " + str(exc.code) + ": " + str(message)[:500])
 
 
-def _create(model, inputs):
-    if not _token():
-        return None, (jsonify({"error": "Replicate token is missing. Add REPLICATE_API_TOKEN to the server .env file."}), 503)
-    owner, name = model.split("/", 1)
-    result = _replicate("POST", "https://api.replicate.com/v1/models/" + owner + "/" + name + "/predictions",
-                        {"input": inputs}, wait=5)
-    prediction_id = str(result.get("id", ""))
-    if not prediction_id:
-        raise RuntimeError("Replicate did not return a prediction ID.")
-    _predictions[prediction_id] = {"owner": session.get("owner_username", "local"), "created": True}
-    return result, None
+def _fal_queue_url(url):
+    parsed = urllib.parse.urlparse(str(url or ""))
+    if parsed.scheme != "https" or parsed.hostname not in ("queue.fal.run", "fal.run"):
+        raise RuntimeError("fal.ai returned an unexpected queue URL.")
+    return url
 
 
-def _image_data_url(upload):
-    if not upload or not upload.filename:
-        return None
-    mime = (upload.mimetype or "").lower()
-    if mime not in ("image/png", "image/jpeg", "image/webp"):
-        raise ValueError("Reference image must be PNG, JPG or WEBP.")
-    raw = upload.read(7 * 1024 * 1024 + 1)
-    if len(raw) > 7 * 1024 * 1024:
-        raise ValueError("Reference image must be smaller than 7 MB.")
-    if not raw:
-        raise ValueError("The selected image is empty.")
-    return "data:" + mime + ";base64," + base64.b64encode(raw).decode("ascii")
+def _owner():
+    return session.get("owner_username", "local")
+
+
+def _normalise_video_result(result):
+    video = result.get("video") if isinstance(result, dict) else None
+    if isinstance(video, dict) and video.get("url"):
+        return [video["url"]]
+    if isinstance(video, str) and video.startswith("https://"):
+        return [video]
+    videos = result.get("videos") if isinstance(result, dict) else None
+    if isinstance(videos, list):
+        return [item.get("url") for item in videos if isinstance(item, dict) and item.get("url")]
+    return []
 
 
 @creative_bp.get("/api/creative/config")
 def creative_config():
-    pollinations_key = _pollinations_key()
+    ready = bool(_fal_key())
     return jsonify({
-        "configured": bool(_token() or pollinations_key),
-        "image_configured": bool(pollinations_key),
-        "image_provider": "pollinations" if pollinations_key else "none",
-        "video_configured": bool(_token()),
-        "image_model": "flux",
-        "video_model": os.getenv("REPLICATE_VIDEO_MODEL", "minimax/video-01"),
+        "configured": ready,
+        "image_configured": ready,
+        "video_configured": ready,
+        "provider": "fal.ai",
+        "image_provider": "fal.ai" if ready else "none",
+        "image_model": IMAGE_MODEL,
+        "video_model": VIDEO_MODEL,
     })
 
 
 @creative_bp.post("/api/creative/image")
 def generate_image():
-    data = request.form
-    prompt = str(data.get("prompt", "")).strip()
+    prompt = str(request.form.get("prompt", "")).strip()
     if not prompt or len(prompt) > 1800:
         return jsonify({"error": "Write an image prompt (maximum 1,800 characters)."}), 400
+    if not _fal_key():
+        return jsonify({"error": "fal.ai is not configured. Add FAL_KEY to the private PythonAnywhere .env file."}), 503
     try:
-        if not _pollinations_key():
-            return jsonify({"error": "Pollinations image generation is not configured. Add POLLINATIONS_API_KEY to the private .env file. No paid Replicate image fallback will be used."}), 503
-        if request.files.get("reference") and request.files["reference"].filename:
-            return jsonify({"error": "Pollinations image generation currently supports text-to-image in this studio. Remove the reference image."}), 400
-        image_data = _pollinations_image(prompt)
-        return jsonify({"image_data": image_data, "provider": "pollinations"}), 200
+        ratio = str(request.form.get("aspect_ratio", "1:1")).strip()
+        allowed = {"1:1", "16:9", "9:16", "4:3", "3:4"}
+        if ratio not in allowed:
+            ratio = "1:1"
+        result = _fal_call(
+            "https://fal.run/" + IMAGE_MODEL,
+            method="POST",
+            payload={"prompt": prompt, "aspect_ratio": ratio, "num_images": 1, "resolution": "1K", "output_format": "jpeg"},
+            timeout=180,
+        )
+        images = result.get("images", []) if isinstance(result, dict) else []
+        urls = [item.get("url") for item in images if isinstance(item, dict) and item.get("url")]
+        if not urls:
+            raise RuntimeError("fal.ai completed the image request but returned no image URL.")
+        return jsonify({"images": urls, "provider": "fal.ai"}), 200
     except Exception as exc:
         return jsonify({"error": str(exc)}), 502
 
 
 @creative_bp.post("/api/creative/video")
 def generate_video():
-    data = request.form
-    prompt = str(data.get("prompt", "")).strip()
+    prompt = str(request.form.get("prompt", "")).strip()
     if not prompt or len(prompt) > 1200:
         return jsonify({"error": "Write a video prompt (maximum 1,200 characters)."}), 400
+    if not _fal_key():
+        return jsonify({"error": "fal.ai is not configured. Add FAL_KEY to the private PythonAnywhere .env file."}), 503
     try:
-        inputs = {"prompt": prompt}
-        reference = _image_data_url(request.files.get("reference"))
-        if reference:
-            inputs["first_frame_image"] = reference
-        result, error = _create(_model("REPLICATE_VIDEO_MODEL", "minimax/video-01"), inputs)
-        if error:
-            return error
-        return jsonify({"prediction": result}), 202
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
+        if request.files.get("reference") and request.files["reference"].filename:
+            return jsonify({"error": "This video mode currently creates video from text. Image-to-video will be added as a separate mode."}), 400
+        duration = int(request.form.get("duration", "5"))
+        duration = max(2, min(15, duration))
+        ratio = str(request.form.get("aspect_ratio", "16:9")).strip()
+        if ratio not in {"21:9", "16:9", "4:3", "1:1", "3:4", "9:16"}:
+            ratio = "16:9"
+        payload = {
+            "prompt": prompt,
+            "prompt_expansion_mode": "balanced",
+            "duration": duration,
+            "resolution": "768P",
+            "aspect_ratio": ratio,
+            "enable_safety_checker": True,
+        }
+        result = _fal_call("https://queue.fal.run/" + VIDEO_MODEL, method="POST", payload=payload, timeout=45)
+        request_id = str(result.get("request_id") or result.get("id") or "")
+        if not request_id or not result.get("status_url") or not result.get("response_url"):
+            raise RuntimeError("fal.ai did not return the video queue details.")
+        _jobs[request_id] = {
+            "owner": _owner(),
+            "endpoint_id": VIDEO_MODEL,
+            "status_url": _fal_queue_url(result["status_url"]),
+            "response_url": _fal_queue_url(result["response_url"]),
+        }
+        return jsonify({"prediction": {"id": request_id, "status": "starting"}}), 202
     except Exception as exc:
         return jsonify({"error": str(exc)}), 502
 
 
-@creative_bp.get("/api/creative/status/<prediction_id>")
-def creative_status(prediction_id):
-    record = _predictions.get(prediction_id)
-    if not record or record["owner"] != session.get("owner_username", "local"):
-        return jsonify({"error": "Prediction not found in this browser session."}), 404
-    if not _token():
-        return jsonify({"error": "Replicate token is not configured."}), 503
+@creative_bp.get("/api/creative/status/<request_id>")
+def creative_status(request_id):
+    job = _jobs.get(request_id)
+    if not job or job["owner"] != _owner():
+        return jsonify({"error": "Video request not found in this browser session. Start a new request."}), 404
     try:
-        result = _replicate("GET", "https://api.replicate.com/v1/predictions/" + prediction_id)
-        return jsonify({"prediction": result})
+        state = _fal_call(job["status_url"], timeout=45)
+        status = str(state.get("status", "IN_PROGRESS")).upper()
+        if status in ("IN_QUEUE", "IN_PROGRESS", "QUEUED"):
+            return jsonify({"prediction": {"id": request_id, "status": "processing"}})
+        if status in ("FAILED", "CANCELLED", "CANCELED"):
+            return jsonify({"prediction": {"id": request_id, "status": "failed", "error": state.get("error") or "fal.ai video generation failed."}})
+        if status == "COMPLETED":
+            result = _fal_call(job["response_url"], timeout=90)
+            urls = _normalise_video_result(result)
+            if not urls:
+                raise RuntimeError("fal.ai completed the video request but returned no video URL.")
+            return jsonify({"prediction": {"id": request_id, "status": "succeeded", "output": urls}})
+        return jsonify({"prediction": {"id": request_id, "status": "processing"}})
     except Exception as exc:
         return jsonify({"error": str(exc)}), 502
